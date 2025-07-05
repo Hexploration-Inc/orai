@@ -1,135 +1,105 @@
-# Turborepo starter
+# Orai - The Open-Source, Privacy-First Email Client
 
-This Turborepo starter is maintained by the Turborepo core team.
+<p align="center">
+  <strong>The email client that respects your privacy, enhances your productivity, and is free forever.</strong>
+</p>
 
-## Using this example
+<p align="center">
+  <a href="#">
+    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">
+  </a>
+  <a href="#">
+    <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome">
+  </a>
+</p>
 
-Run the following command:
+---
 
-```sh
-npx create-turbo@latest
-```
+## Our Mission
 
-## What's inside?
+In a world where your data is the product, Orai is a statement. We are building a beautiful, performant, and intelligent email client that puts you first. **No ads, no tracking, no compromise.** Our mission is to provide a secure and powerful email experience that is open, transparent, and driven by the community.
 
-This Turborepo includes the following packages/apps:
+## Core Principles
 
-### Apps and Packages
+- **Open Source:** Our entire codebase is open for the world to see, audit, and contribute to.
+- **Privacy-First:** We will never track you or sell your data. Your emails are your own.
+- **Performant:** Built with a modern tech stack, Orai is designed to be fast, lightweight, and a joy to use.
+- **AI-Enabled:** We leverage the power of AI to help you manage your inbox, not to mine your data.
+- **Minimalistic:** A clean, intuitive interface that focuses on what matters most: your communication.
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+## Tech Stack
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+- **Web App:** [Next.js](https://nextjs.org/) & [React](https://reactjs.org/)
+- **Backend API:** [Fastify](https://www.fastify.io/)
+- **Database:** [PostgreSQL](https://www.postgresql.org/)
+- **UI:** [shadcn/ui](https://ui.shadcn.com/) & [Tailwind CSS](https://tailwindcss.com/)
+- **Mobile App:** Coming soon, built with [React Native](https://reactnative.dev/).
 
-### Utilities
+## Feature Roadmap
 
-This Turborepo has some additional tools already setup for you:
+We have a bold vision for Orai. Here's a look at the features we'll be implementing, one by one.
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+### Phase 1: The Foundation
 
-### Build
+- [x] **Secure Gmail Integration:** Connect your Gmail account securely using OAuth.
+- [ ] **Core Email Functionality:**
+  - [ ] View, send, and receive emails.
+  - [ ] Rich text editor for composing emails.
+  - [ ] Support for attachments.
+  - [ ] Archive, delete, and mark emails as spam.
+- [ ] **Multi-Account Support:** Seamlessly switch between multiple Gmail accounts.
+- [ ] **Keyboard Shortcuts:** A comprehensive set of keyboard shortcuts for power users.
 
-To build all apps and packages, run the following command:
+### Phase 2: AI & Productivity
 
-```
-cd my-turborepo
+- [ ] **AI-Powered Email Summarization:** Get the gist of long emails and threads in seconds.
+- [ ] **Smart Reply:** AI-generated reply suggestions that match your tone and context.
+- [ ] **Priority Inbox:** An intelligent system that automatically categorizes and prioritizes your emails.
+- [ ] **Natural Language Search:** Find any email by searching in plain English (e.g., "emails from last week about the project").
+- [ ] **Snooze & Reminders:** Snooze emails to have them reappear in your inbox at a later time.
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
+### Phase 3: The Ecosystem
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
+- [ ] **Calendar Integration:** A built-in calendar that syncs with your Google Calendar.
+- [ ] **Cross-Platform Mobile App:** A beautiful and performant mobile app for iOS and Android.
+- [ ] **Support for More Providers:** Adding support for Outlook, iCloud, and any IMAP account.
+- [ ] **End-to-End Encryption:** Optional PGP-based end-to-end encryption for maximum security.
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## Getting Started
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+To get started with developing Orai locally, follow these steps:
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+1.  **Clone the repository:**
 
-### Develop
+    ```bash
+    git clone https://github.com/your-username/orai.git
+    cd orai
+    ```
 
-To develop all apps and packages, run the following command:
+2.  **Install dependencies:**
 
-```
-cd my-turborepo
+    ```bash
+    pnpm install
+    ```
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+3.  **Run the development servers:**
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+    ```bash
+    # Run the web app
+    pnpm dev --filter web
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+    # Run the API
+    pnpm dev --filter api
+    ```
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+The web app will be available at `http://localhost:3000` and the API at `http://localhost:3001`.
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+## Contributing
 
-### Remote Caching
+Orai is built by the community, for the community. We welcome all contributions, from bug fixes to new features. Please feel free to open an issue or submit a pull request.
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+---
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+<p align="center">
+  <strong>Join us in building the future of email.</strong>
+</p>
