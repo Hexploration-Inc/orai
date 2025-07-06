@@ -5,6 +5,8 @@ import {
   FastifyRequest,
 } from "fastify";
 import { google } from "googleapis";
+import { storeTokens } from "../token-store";
+import crypto from "crypto";
 
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
@@ -45,20 +47,22 @@ export default async function (
 
       try {
         const { tokens } = await oauth2Client.getToken(code);
-        oauth2Client.setCredentials(tokens);
 
-        // In a real app, you would associate these tokens with a user and store them securely.
-        // The refresh_token is especially sensitive and should be encrypted at rest.
-        console.log("Access Token:", tokens.access_token);
-        console.log("Refresh Token:", tokens.refresh_token);
+        // Create a secure session
+        const sessionId = crypto.randomUUID();
+        storeTokens(sessionId, tokens); // Store tokens in our in-memory store
 
-        const gmail = google.gmail({ version: "v1", auth: oauth2Client });
-        const profile = await gmail.users.getProfile({ userId: "me" });
+        // Set a signed, httpOnly cookie to identify the user's session
+        reply.setCookie("sessionId", sessionId, {
+          path: "/",
+          httpOnly: true, // Prevents client-side JS from accessing the cookie
+          secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+          signed: true,
+          maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
+        });
 
-        console.log("Authenticated as:", profile.data.emailAddress);
-
-        // Redirect the user back to the web app
-        reply.redirect("http://localhost:3000");
+        // Redirect the user back to the web app's new dashboard
+        reply.redirect("http://localhost:3000/dashboard");
       } catch (err) {
         server.log.error(
           err,
