@@ -26,6 +26,9 @@ importers:
       '@fastify/cors':
         specifier: ^9.0.1
         version: 9.0.1
+      '@prisma/client':
+        specifier: ^6.11.1
+        version: 6.11.1(prisma@6.11.1)(typescript@5.8.2)
       dotenv:
         specifier: ^17.0.1
         version: 17.0.1
@@ -51,6 +54,9 @@ importers:
       eslint:
         specifier: ^9.30.0
         version: 9.30.1
+      prisma:
+        specifier: ^6.11.1
+        version: 6.11.1(typescript@5.8.2)
       tsx:
         specifier: ^4.16.2
         version: 4.20.3
@@ -985,6 +991,55 @@ packages:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.19.1
     dev: true
+
+  /@prisma/client@6.11.1(prisma@6.11.1)(typescript@5.8.2):
+    resolution: {integrity: sha512-5CLFh8QP6KxRm83pJ84jaVCeSVPQr8k0L2SEtOJHwdkS57/VQDcI/wQpGmdyOZi+D9gdNabdo8tj1Uk+w+upsQ==}
+    engines: {node: '>=18.18'}
+    requiresBuild: true
+    peerDependencies:
+      prisma: '*'
+      typescript: '>=5.1.0'
+    peerDependenciesMeta:
+      prisma:
+        optional: true
+      typescript:
+        optional: true
+    dependencies:
+      prisma: 6.11.1(typescript@5.8.2)
+      typescript: 5.8.2
+    dev: false
+
+  /@prisma/config@6.11.1:
+    resolution: {integrity: sha512-z6rCTQN741wxDq82cpdzx2uVykpnQIXalLhrWQSR0jlBVOxCIkz3HZnd8ern3uYTcWKfB3IpVAF7K2FU8t/8AQ==}
+    dependencies:
+      jiti: 2.4.2
+
+  /@prisma/debug@6.11.1:
+    resolution: {integrity: sha512-lWRb/YSWu8l4Yum1UXfGLtqFzZkVS2ygkWYpgkbgMHn9XJlMITIgeMvJyX5GepChzhmxuSuiq/MY/kGFweOpGw==}
+
+  /@prisma/engines-version@6.11.1-1.f40f79ec31188888a2e33acda0ecc8fd10a853a9:
+    resolution: {integrity: sha512-swFJTOOg4tHyOM1zB/pHb3MeH0i6t7jFKn5l+ZsB23d9AQACuIRo9MouvuKGvnDogzkcjbWnXi/NvOZ0+n5Jfw==}
+
+  /@prisma/engines@6.11.1:
+    resolution: {integrity: sha512-6eKEcV6V8W2eZAUwX2xTktxqPM4vnx3sxz3SDtpZwjHKpC6lhOtc4vtAtFUuf5+eEqBk+dbJ9Dcaj6uQU+FNNg==}
+    requiresBuild: true
+    dependencies:
+      '@prisma/debug': 6.11.1
+      '@prisma/engines-version': 6.11.1-1.f40f79ec31188888a2e33acda0ecc8fd10a853a9
+      '@prisma/fetch-engine': 6.11.1
+      '@prisma/get-platform': 6.11.1
+
+  /@prisma/fetch-engine@6.11.1:
+    resolution: {integrity: sha512-NBYzmkXTkj9+LxNPRSndaAeALOL1Gr3tjvgRYNqruIPlZ6/ixLeuE/5boYOewant58tnaYFZ5Ne0jFBPfGXHpQ==}
+    dependencies:
+      '@prisma/debug': 6.11.1
+      '@prisma/engines-version': 6.11.1-1.f40f79ec31188888a2e33acda0ecc8fd10a853a9
+      '@prisma/get-platform': 6.11.1
+
+  /@prisma/get-platform@6.11.1:
+    resolution: {integrity: sha512-b2Z8oV2gwvdCkFemBTFd0x4lsL4O2jLSx8lB7D+XqoFALOQZPa7eAPE1NU0Mj1V8gPHRxIsHnyUNtw2i92psUw==}
+    dependencies:
+      '@prisma/debug': 6.11.1
 
   /@swc/counter@0.1.3:
     resolution: {integrity: sha512-e2BR4lsJkkRlKZ/qCHPw9ZaSxc0MVUd7gtbtaB7aMvHeJVYe8sOB8DBZkP2DtISHGSku9sCK6T6cnY0CtXrOCQ==}
@@ -3395,7 +3450,6 @@ packages:
   /jiti@2.4.2:
     resolution: {integrity: sha512-rg9zJN+G4n2nfJl5MW3BMygZX56zKPNVEYYqq7adpmMh4Jn2QNEwhvQlFy6jPVdcod7txZtKHWnyZiA3a0zP7A==}
     hasBin: true
-    dev: false
 
   /js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -4179,6 +4233,21 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
     dev: true
+
+  /prisma@6.11.1(typescript@5.8.2):
+    resolution: {integrity: sha512-VzJToRlV0s9Vu2bfqHiRJw73hZNCG/AyJeX+kopbu4GATTjTUdEWUteO3p4BLYoHpMS4o8pD3v6tF44BHNZI1w==}
+    engines: {node: '>=18.18'}
+    hasBin: true
+    requiresBuild: true
+    peerDependencies:
+      typescript: '>=5.1.0'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+    dependencies:
+      '@prisma/config': 6.11.1
+      '@prisma/engines': 6.11.1
+      typescript: 5.8.2
 
   /process-warning@3.0.0:
     resolution: {integrity: sha512-mqn0kFRl0EoqhnL0GQ0veqFHyIN1yig9RHh/InzORTUiZHFRAur+aMtRkELNwGs9aNwKS6tg/An4NYBPGwvtzQ==}
@@ -5105,7 +5174,6 @@ packages:
     resolution: {integrity: sha512-aJn6wq13/afZp/jT9QZmwEjDqqvSGp1VT5GVg+f/t6/oVyrgXM6BY1h9BRh/O5p3PlUPAe+WuiEZOmb/49RqoQ==}
     engines: {node: '>=14.17'}
     hasBin: true
-    dev: true
 
   /uglify-js@3.19.3:
     resolution: {integrity: sha512-v3Xu+yuwBXisp6QYTcH4UbH+xYJXqnq2m/LtQVWKWzYc1iehYnLixoQDN9FH6/j9/oybfd6W9Ghwkl8+UMKTKQ==}

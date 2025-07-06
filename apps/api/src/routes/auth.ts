@@ -7,6 +7,8 @@ import {
 import { google } from "googleapis";
 import { storeTokens } from "../token-store";
 import crypto from "crypto";
+import { syncRecentEmails } from "../services/gmail";
+import prisma from "../lib/prisma";
 
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
@@ -47,6 +49,28 @@ export default async function (
 
       try {
         const { tokens } = await oauth2Client.getToken(code);
+        oauth2Client.setCredentials(tokens);
+
+        // 1. Get user profile from Google
+        const oauth2 = google.oauth2({ version: "v2", auth: oauth2Client });
+        const { data: googleProfile } = await oauth2.userinfo.get();
+
+        if (!googleProfile.id || !googleProfile.email) {
+          throw new Error("Failed to retrieve Google profile information.");
+        }
+
+        // 2. Create or update user in our database
+        const user = await prisma.user.upsert({
+          where: { id: googleProfile.id },
+          update: {}, // no fields to update for now
+          create: {
+            id: googleProfile.id,
+            // email: googleProfile.email // We can add an email field to the User model later
+          },
+        });
+
+        // 3. Start the initial email sync (don't wait for it to complete)
+        syncRecentEmails(user.id, tokens);
 
         // Create a secure session
         const sessionId = crypto.randomUUID();

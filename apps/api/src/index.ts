@@ -4,6 +4,7 @@ import cors from "@fastify/cors";
 import cookie from "@fastify/cookie";
 import authRoutes from "./routes/auth";
 import apiRoutes from "./routes/api";
+import emailRoutes from "./routes/emails";
 
 const server = Fastify({
   logger: true,
@@ -24,6 +25,7 @@ server.get("/", async (request, reply) => {
 
 server.register(authRoutes);
 server.register(apiRoutes, { prefix: "/api" });
+server.register(emailRoutes, { prefix: "/api" });
 
 const start = async () => {
   try {
