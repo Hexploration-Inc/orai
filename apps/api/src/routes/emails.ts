@@ -2,6 +2,8 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from "fastify";
 import { getTokens } from "../token-store";
 import prisma from "../lib/prisma";
 import { google } from "googleapis";
+import R2 from "../lib/r2";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
 
 // A temporary way to get user ID from session. We will improve this.
 async function getUserIdFromSession(
@@ -70,7 +72,22 @@ export default async function (
         return reply.status(404).send({ error: "Email not found" });
       }
 
-      return email;
+      // If the email has a body stored in R2, fetch it
+      let bodyHtml = "";
+      if (email.r2ObjectKey) {
+        const command = new GetObjectCommand({
+          Bucket: process.env.R2_BUCKET_NAME,
+          Key: email.r2ObjectKey,
+        });
+        const response = await R2.send(command);
+        bodyHtml = (await response.Body?.transformToString()) ?? "";
+      }
+
+      // Combine the database record with the R2 body and return
+      return {
+        ...email,
+        bodyHtml,
+      };
     }
   );
 }

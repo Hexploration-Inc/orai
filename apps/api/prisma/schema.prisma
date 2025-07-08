@@ -39,8 +39,7 @@ model Email {
   ccData          Json?     @map("cc_data")
   bccData         Json?     @map("bcc_data")
   
-  bodyHtml        String?   @map("body_html")
-  bodyText        String?   @map("body_text")
+  r2ObjectKey     String?   @map("r2_object_key")
 
   isRead          Boolean   @default(false)
   labels          String[]

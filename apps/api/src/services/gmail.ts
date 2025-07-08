@@ -1,6 +1,8 @@
 import { Credentials, OAuth2Client } from "google-auth-library";
 import { gmail_v1, google } from "googleapis";
 import prisma from "../lib/prisma";
+import R2 from "../lib/r2";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 /**
  * Creates an authenticated OAuth2 client for the user.
@@ -90,9 +92,20 @@ async function processAndSaveEmail(
       }
     : null;
 
-  // Use upsert to avoid creating duplicate emails. It will create a new email
-  // if one with the same gmailMessageId doesn't exist for this user,
-  // or update it if it does.
+  // Upload the HTML body to R2
+  const objectKey = `${userId}/${gmailMessage.id}.html`;
+  if (body) {
+    await R2.send(
+      new PutObjectCommand({
+        Bucket: process.env.R2_BUCKET_NAME,
+        Key: objectKey,
+        Body: body,
+        ContentType: "text/html",
+      })
+    );
+  }
+
+  // Use upsert to avoid creating duplicate emails.
   await prisma.email.upsert({
     where: {
       userId_gmailMessageId: {
@@ -111,8 +124,7 @@ async function processAndSaveEmail(
       subject: getHeader("Subject"),
       snippet: gmailMessage.snippet ?? null,
       fromData: fromData ?? undefined,
-      // toData, ccData, etc., would be parsed similarly
-      bodyHtml: body,
+      r2ObjectKey: body ? objectKey : null, // Save the R2 key instead of the body
       isRead: !gmailMessage.labelIds?.includes("UNREAD"),
       labels: gmailMessage.labelIds ?? [],
       receivedAt: gmailMessage.internalDate
