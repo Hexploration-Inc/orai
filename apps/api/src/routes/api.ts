@@ -30,28 +30,16 @@ export default async function (
     const oauth2Client = new google.auth.OAuth2();
     oauth2Client.setCredentials(tokens!);
 
-    const gmail = google.gmail({ version: "v1", auth: oauth2Client });
-    const profile = await gmail.users.getProfile({ userId: "me" });
+    // Use the OAuth2 client to get richer user profile information
+    const oauth2 = google.oauth2({ version: "v2", auth: oauth2Client });
+    const { data } = await oauth2.userinfo.get();
 
-    return profile.data;
+    // Return the name and email, which is what the frontend expects
+    return {
+      name: data.name,
+      email: data.email,
+    };
   });
-
-  server.get(
-    "/emails",
-    async (request: FastifyRequest, reply: FastifyReply) => {
-      const tokens = getTokens(request.sessionId!);
-      const oauth2Client = new google.auth.OAuth2();
-      oauth2Client.setCredentials(tokens!);
-
-      const gmail = google.gmail({ version: "v1", auth: oauth2Client });
-      const res = await gmail.users.messages.list({
-        userId: "me",
-        maxResults: 20, // Fetch the 20 most recent emails
-      });
-
-      return res.data;
-    }
-  );
 }
 
 // Augment the FastifyRequest interface to include our custom property
