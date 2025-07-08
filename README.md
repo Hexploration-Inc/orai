@@ -42,15 +42,22 @@ We have a bold vision for Orai. Here's a look at the features we'll be implement
 ### Phase 1: The Foundation
 
 - [x] **Secure Gmail Integration:** Connect your Gmail account securely using OAuth.
-- [ ] **Core Email Functionality:**
-  - [ ] View, send, and receive emails.
+- [x] **Core Email Functionality:**
+  - [x] View, send, and receive emails.
   - [ ] Rich text editor for composing emails.
   - [ ] Support for attachments.
   - [ ] Archive, delete, and mark emails as spam.
 - [ ] **Multi-Account Support:** Seamlessly switch between multiple Gmail accounts.
 - [ ] **Keyboard Shortcuts:** A comprehensive set of keyboard shortcuts for power users.
 
-### Phase 2: AI & Productivity
+### Phase 2: UI/UX Overhaul
+
+- [ ] **Modern, Resizable Layout:** Implement a responsive, multi-column layout similar to modern email clients.
+- [ ] **Component-Based UI:** Rebuild the interface using our `shadcn/ui` and `Tailwind CSS` stack for a polished and consistent look.
+- [ ] **Theming:** Introduce support for both light and dark modes.
+- [ ] **Refined User Experience:** Add professional loading states, empty states, and improved visual feedback.
+
+### Phase 3: AI & Productivity
 
 - [ ] **AI-Powered Email Summarization:** Get the gist of long emails and threads in seconds.
 - [ ] **Smart Reply:** AI-generated reply suggestions that match your tone and context.
@@ -58,7 +65,7 @@ We have a bold vision for Orai. Here's a look at the features we'll be implement
 - [ ] **Natural Language Search:** Find any email by searching in plain English (e.g., "emails from last week about the project").
 - [ ] **Snooze & Reminders:** Snooze emails to have them reappear in your inbox at a later time.
 
-### Phase 3: The Ecosystem
+### Phase 4: The Ecosystem
 
 - [ ] **Calendar Integration:** A built-in calendar that syncs with your Google Calendar.
 - [ ] **Cross-Platform Mobile App:** A beautiful and performant mobile app for iOS and Android.
