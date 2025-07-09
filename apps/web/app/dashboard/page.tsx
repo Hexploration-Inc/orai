@@ -4,11 +4,20 @@ import { useEffect, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
-import { Archive, Trash2, Mail, Inbox, Send, FileArchive } from "lucide-react";
+import {
+  Archive,
+  Trash2,
+  Inbox,
+  Send,
+  FileArchive,
+  Mail,
+  MailOpen,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
@@ -33,6 +42,13 @@ interface Email {
   date: string;
 }
 
+interface Mailbox {
+  name: string;
+  icon: React.ElementType;
+  count?: number;
+  active: boolean;
+}
+
 // Helper to get initials from a name
 const getInitials = (name: string) => {
   const names = name.split(" ");
@@ -42,150 +58,259 @@ const getInitials = (name: string) => {
   return name.substring(0, 2).toUpperCase();
 };
 
-// Components
-const MailboxNav = () => (
-  <div className="p-2 space-y-1">
-    <a
-      href="#"
-      className="flex items-center space-x-3 px-3 py-2 text-sm font-medium bg-accent text-accent-foreground rounded-md"
-    >
-      <Inbox size={18} />
-      <span>Inbox</span>
-    </a>
-    <a
-      href="#"
-      className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted rounded-md"
-    >
-      <FileArchive size={18} />
-      <span>Archived</span>
-    </a>
-    <a
-      href="#"
-      className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted rounded-md"
-    >
-      <Send size={18} />
-      <span>Sent</span>
-    </a>
+// Loading Skeleton Components
+const EmailListSkeleton = () => (
+  <div className="h-full">
+    <div className="p-4 border-b border-neutral-200 dark:border-neutral-800">
+      <Skeleton className="h-6 w-16" />
+    </div>
+    <div className="p-4 space-y-4">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="flex items-start space-x-3">
+          <div className="w-5 flex-shrink-0">
+            <Skeleton className="h-2 w-2 rounded-full" />
+          </div>
+          <div className="flex-1 space-y-2">
+            <div className="flex justify-between items-center">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-12" />
+            </div>
+            <Skeleton className="h-4 w-48" />
+            <Skeleton className="h-3 w-64" />
+          </div>
+        </div>
+      ))}
+    </div>
   </div>
+);
+
+const EmailDetailSkeleton = () => (
+  <div className="h-full flex flex-col">
+    <div className="p-6 border-b border-neutral-200 dark:border-neutral-800">
+      <Skeleton className="h-7 w-80 mb-3" />
+      <Skeleton className="h-4 w-64" />
+    </div>
+    <div className="p-6 space-y-4">
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-3/4" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-2/3" />
+    </div>
+  </div>
+);
+
+// Empty State Components
+const EmptyEmailList = () => (
+  <div className="h-full flex flex-col items-center justify-center text-center p-8">
+    <div className="bg-neutral-100 dark:bg-neutral-800 rounded-full p-6 mb-6">
+      <MailOpen className="h-12 w-12 text-neutral-400 dark:text-neutral-600" />
+    </div>
+    <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
+      No emails found
+    </h3>
+    <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-sm">
+      Your inbox is empty. When you receive emails, they'll appear here.
+    </p>
+  </div>
+);
+
+const EmptyEmailDetail = () => (
+  <div className="h-full flex flex-col items-center justify-center text-center p-8">
+    <div className="bg-neutral-100 dark:bg-neutral-800 rounded-full p-6 mb-6">
+      <Mail className="h-12 w-12 text-neutral-400 dark:text-neutral-600" />
+    </div>
+    <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
+      Select an email
+    </h3>
+    <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-sm">
+      Choose an email from the list to view its contents here.
+    </p>
+  </div>
+);
+
+// Components
+const MailboxNav = ({ mailboxes }: { mailboxes: Mailbox[] }) => (
+  <nav className="p-3 space-y-1">
+    {mailboxes.map((mailbox) => (
+      <a
+        key={mailbox.name}
+        href="#"
+        className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+          mailbox.active
+            ? "bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
+            : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-900 hover:text-neutral-900 dark:hover:text-neutral-100"
+        }`}
+      >
+        <div className="flex items-center space-x-3">
+          <mailbox.icon size={18} />
+          <span className="font-medium">{mailbox.name}</span>
+        </div>
+        {mailbox.count ? (
+          <span className="px-2 py-0.5 text-xs font-semibold bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-full">
+            {mailbox.count}
+          </span>
+        ) : null}
+      </a>
+    ))}
+  </nav>
 );
 
 const EmailList = ({
   emails,
   onEmailSelect,
   selectedEmailId,
+  isLoading,
 }: {
   emails: Email[];
   onEmailSelect: (id: string) => void;
   selectedEmailId: string | null;
-}) => (
-  <div className="h-full">
-    <div className="p-4 border-b">
-      <h2 className="text-xl font-bold">Inbox</h2>
-    </div>
-    <div className="overflow-y-auto h-full pb-20">
-      {emails.map((email) => {
-        const fromName =
-          email.fromData?.name || email.fromData?.email || "Unknown";
-        return (
-          <div key={email.id}>
-            <div
-              onClick={() => onEmailSelect(email.id)}
-              className={`flex items-start p-4 cursor-pointer group hover:bg-muted/50 ${
-                selectedEmailId === email.id ? "bg-accent" : ""
-              }`}
-            >
-              {!email.isRead && (
-                <div className="w-2 h-2 bg-primary rounded-full mr-3 mt-2" />
-              )}
-              <Avatar className="mr-4">
-                <AvatarFallback>{getInitials(fromName)}</AvatarFallback>
-              </Avatar>
+  isLoading: boolean;
+}) => {
+  if (isLoading) {
+    return <EmailListSkeleton />;
+  }
+
+  if (emails.length === 0) {
+    return <EmptyEmailList />;
+  }
+
+  return (
+    <div className="h-full">
+      <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-800">
+        <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
+          Inbox
+        </h2>
+      </div>
+      <div className="overflow-y-auto h-full pb-20">
+        {emails.map((email) => {
+          const fromName =
+            email.fromData?.name || email.fromData?.email || "Unknown";
+          return (
+            <div key={email.id}>
               <div
-                className={`flex-1 overflow-hidden ${
-                  !email.isRead ? "pl-0" : "pl-5"
+                onClick={() => onEmailSelect(email.id)}
+                className={`flex items-start px-6 py-4 cursor-pointer group hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors ${
+                  selectedEmailId === email.id
+                    ? "bg-neutral-100 dark:bg-neutral-800"
+                    : ""
                 }`}
               >
-                <div className="flex justify-between items-baseline">
+                <div className="w-5 flex-shrink-0 mr-4">
+                  {!email.isRead && (
+                    <div className="w-2.5 h-2.5 mt-2 bg-blue-500 rounded-full" />
+                  )}
+                </div>
+                <div className="flex-1 overflow-hidden">
+                  <div className="flex justify-between items-baseline mb-1">
+                    <p
+                      className={`truncate text-sm font-medium leading-5 ${
+                        email.isRead
+                          ? "text-neutral-600 dark:text-neutral-400"
+                          : "text-neutral-900 dark:text-neutral-100 font-semibold"
+                      }`}
+                    >
+                      {fromName}
+                    </p>
+                    <span
+                      className={`text-xs flex-shrink-0 ml-4 ${
+                        email.isRead
+                          ? "text-neutral-400 dark:text-neutral-500"
+                          : "text-neutral-600 dark:text-neutral-300 font-medium"
+                      } group-hover:text-neutral-700 dark:group-hover:text-neutral-200`}
+                    >
+                      {email.date}
+                    </span>
+                  </div>
                   <p
-                    className={`font-semibold truncate ${
-                      !email.isRead ? "" : "text-muted-foreground"
+                    className={`truncate text-sm mb-1 leading-5 ${
+                      email.isRead
+                        ? "text-neutral-600 dark:text-neutral-400"
+                        : "font-semibold text-neutral-900 dark:text-neutral-100"
                     }`}
                   >
-                    {fromName}
+                    {email.subject}
                   </p>
-                  <span
-                    className={`text-xs ${
-                      !email.isRead
-                        ? "text-foreground"
-                        : "text-muted-foreground"
-                    } group-hover:text-foreground`}
-                  >
-                    {email.date}
-                  </span>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-500 truncate leading-4">
+                    {email.snippet}
+                  </p>
                 </div>
-                <p className="font-medium truncate">{email.subject}</p>
-                <p className="text-sm text-muted-foreground truncate">
-                  {email.snippet}
-                </p>
               </div>
+              <Separator className="mx-6" />
             </div>
-            <Separator />
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const EmailDetail = ({
   email,
   onModify,
+  isLoading,
 }: {
-  email: Email;
+  email: Email | null;
   onModify: (id: string, action: "archive" | "trash" | "spam") => void;
-}) => (
-  <TooltipProvider>
-    <div className="h-full flex flex-col">
-      <div className="p-4 border-b flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold">{email.subject}</h2>
-          <p className="text-sm text-muted-foreground">
-            From: {email.fromData?.name || "Unknown"} &lt;
-            {email.fromData?.email}&gt;
-          </p>
+  isLoading: boolean;
+}) => {
+  if (isLoading) {
+    return <EmailDetailSkeleton />;
+  }
+
+  if (!email) {
+    return <EmptyEmailDetail />;
+  }
+
+  return (
+    <TooltipProvider>
+      <div className="h-full flex flex-col">
+        <div className="px-6 py-5 border-b border-neutral-200 dark:border-neutral-800 flex items-start justify-between">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-2 leading-7">
+              {email.subject}
+            </h2>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-5">
+              From:{" "}
+              <span className="font-medium">
+                {email.fromData?.name || "Unknown"}
+              </span>{" "}
+              &lt;{email.fromData?.email}&gt;
+            </p>
+          </div>
+          <div className="flex items-center space-x-2 ml-4">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => onModify(email.id, "archive")}
+                  className="p-2.5 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+                >
+                  <Archive size={18} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Archive</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => onModify(email.id, "trash")}
+                  className="p-2.5 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Delete</TooltipContent>
+            </Tooltip>
+          </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => onModify(email.id, "archive")}
-                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full"
-              >
-                <Archive size={20} />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>Archive</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => onModify(email.id, "trash")}
-                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full"
-              >
-                <Trash2 size={20} />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>Trash</TooltipContent>
-          </Tooltip>
-        </div>
+        <div
+          className="px-6 py-6 prose dark:prose-invert max-w-none flex-1 overflow-y-auto prose-sm prose-neutral dark:prose-neutral"
+          dangerouslySetInnerHTML={{ __html: email.bodyHtml || "" }}
+        />
       </div>
-      <div
-        className="p-4 prose dark:prose-invert max-w-none flex-1 overflow-y-auto"
-        dangerouslySetInnerHTML={{ __html: email.bodyHtml || "" }}
-      />
-    </div>
-  </TooltipProvider>
-);
+    </TooltipProvider>
+  );
+};
 
 const ComposeView = ({
   onSend,
@@ -273,8 +398,21 @@ export default function DashboardPage() {
   const [emails, setEmails] = useState<Email[]>([]);
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isLoadingEmails, setIsLoadingEmails] = useState(true);
   const [isLoadingEmail, setIsLoadingEmail] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
+
+  // MOCK DATA: For mailboxes
+  const mailboxes: Mailbox[] = [
+    {
+      name: "Inbox",
+      icon: Inbox,
+      count: emails.filter((e) => !e.isRead).length,
+      active: true,
+    },
+    { name: "Sent", icon: Send, active: false },
+    { name: "Archived", icon: FileArchive, active: false },
+  ];
 
   const api = (url: string, options?: RequestInit) =>
     fetch(`http://localhost:3001/api${url}`, {
@@ -284,6 +422,7 @@ export default function DashboardPage() {
 
   const fetchEmails = async () => {
     try {
+      setIsLoadingEmails(true);
       const emailsRes = await api("/emails");
       if (!emailsRes.ok) {
         throw new Error("Failed to fetch emails.");
@@ -298,6 +437,8 @@ export default function DashboardPage() {
       setEmails(processedEmails);
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      setIsLoadingEmails(false);
     }
   };
 
@@ -396,66 +537,79 @@ export default function DashboardPage() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-red-500">{error}</div>
+      <div className="flex items-center justify-center h-screen bg-white dark:bg-neutral-950">
+        <div className="text-center">
+          <div className="bg-red-50 dark:bg-red-950/30 rounded-full p-6 mb-4 inline-block">
+            <Mail className="h-12 w-12 text-red-500" />
+          </div>
+          <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
+            Something went wrong
+          </h2>
+          <p className="text-neutral-600 dark:text-neutral-400">{error}</p>
+        </div>
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        Loading profile...
+      <div className="flex items-center justify-center h-screen bg-white dark:bg-neutral-950">
+        <div className="text-center">
+          <Skeleton className="h-12 w-12 rounded-full mx-auto mb-4" />
+          <Skeleton className="h-6 w-32 mx-auto mb-2" />
+          <Skeleton className="h-4 w-24 mx-auto" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen bg-background text-foreground">
-      <header className="flex items-center justify-between p-2 border-b">
-        <div className="font-semibold text-lg">Orai</div>
+    <div className="h-screen bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100">
+      <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950">
+        <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
+          Orai
+        </h1>
         <div className="flex items-center space-x-4">
           <Avatar>
-            <AvatarFallback>{getInitials(profile.name)}</AvatarFallback>
+            <AvatarFallback className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-semibold">
+              {getInitials(profile.name)}
+            </AvatarFallback>
           </Avatar>
           <ThemeToggle />
           <button
             onClick={() => setIsComposing(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
           >
             Compose
           </button>
         </div>
       </header>
 
-      <PanelGroup direction="horizontal" className="h-[calc(100vh-57px)]">
+      <PanelGroup direction="horizontal" className="h-[calc(100vh-73px)]">
         <Panel defaultSize={20} minSize={15}>
-          <MailboxNav />
+          <div className="bg-white dark:bg-neutral-950 h-full">
+            <MailboxNav mailboxes={mailboxes} />
+          </div>
         </Panel>
-        <PanelResizeHandle className="w-px bg-border" />
+        <PanelResizeHandle className="w-px bg-neutral-200 dark:bg-neutral-800 hover:w-px hover:bg-blue-500 transition-colors" />
         <Panel defaultSize={30} minSize={20}>
-          <EmailList
-            emails={emails}
-            onEmailSelect={handleEmailSelect}
-            selectedEmailId={selectedEmail?.id || null}
-          />
+          <div className="bg-white dark:bg-neutral-950 h-full">
+            <EmailList
+              emails={emails}
+              onEmailSelect={handleEmailSelect}
+              selectedEmailId={selectedEmail?.id || null}
+              isLoading={isLoadingEmails}
+            />
+          </div>
         </Panel>
-        <PanelResizeHandle className="w-px bg-border" />
+        <PanelResizeHandle className="w-px bg-neutral-200 dark:bg-neutral-800 hover:w-px hover:bg-blue-500 transition-colors" />
         <Panel defaultSize={50} minSize={30}>
-          <div className="h-full">
-            {isLoadingEmail && (
-              <div className="flex items-center justify-center h-full">
-                Loading email...
-              </div>
-            )}
-            {!isLoadingEmail && !selectedEmail && (
-              <div className="flex items-center justify-center h-full text-muted-foreground">
-                Select an email to read
-              </div>
-            )}
-            {!isLoadingEmail && selectedEmail && (
-              <EmailDetail email={selectedEmail} onModify={handleModifyEmail} />
-            )}
+          <div className="h-full bg-white dark:bg-neutral-950">
+            <EmailDetail
+              email={selectedEmail}
+              onModify={handleModifyEmail}
+              isLoading={isLoadingEmail}
+            />
           </div>
         </Panel>
       </PanelGroup>
