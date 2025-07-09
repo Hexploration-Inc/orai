@@ -11,6 +11,9 @@
   <a href="#">
     <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome">
   </a>
+  <a href="#">
+    <img src="https://img.shields.io/badge/status-beta-yellow.svg" alt="Status: Beta">
+  </a>
 </p>
 
 ---
@@ -31,49 +34,246 @@ In a world where your data is the product, Orai is a statement. We are building 
 
 - **Web App:** [Next.js](https://nextjs.org/) & [React](https://reactjs.org/)
 - **Backend API:** [Fastify](https://www.fastify.io/)
-- **Database:** [PostgreSQL](https://www.postgresql.org/)
+- **Database:** [PostgreSQL](https://www.postgresql.org/) with [Prisma](https://www.prisma.io/)
 - **UI:** [shadcn/ui](https://ui.shadcn.com/) & [Tailwind CSS](https://tailwindcss.com/)
+- **Rich Text Editor:** [TipTap](https://tiptap.dev/)
+- **State Management:** React Hooks & Context
+- **Authentication:** OAuth 2.0 with Google
+- **Storage:** Cloudflare R2 for attachments
 - **Mobile App:** Coming soon, built with [React Native](https://reactnative.dev/).
+
+## Current Features
+
+### ✅ **Secure Gmail Integration**
+
+- **OAuth 2.0 Authentication:** Secure login without storing passwords
+- **Token Management:** Automatic token refresh and secure storage
+- **Scope-Limited Access:** Only request necessary Gmail permissions
+
+### ✅ **Modern Email Interface**
+
+- **Responsive 3-Panel Layout:** Resizable sidebar, email list, and reading pane
+- **Dark/Light Theme Support:** Elegant matte dark theme and clean light theme
+- **Mobile-First Design:** Optimized touch interfaces with responsive breakpoints
+- **Accessibility:** Full keyboard navigation and screen reader support
+
+### ✅ **Core Email Functionality**
+
+- **Email Reading:**
+  - Clean, distraction-free reading experience
+  - Automatic mark-as-read functionality
+  - Rich HTML email rendering
+  - Responsive image handling
+- **Email Composition:**
+  - Rich text editor with formatting tools (Bold, Italic, Links)
+  - Attachment support with drag-and-drop
+  - Auto-save drafts (coming soon)
+  - Keyboard shortcuts (Ctrl+Enter to send)
+  - Panel-based compose on desktop, overlay on mobile
+
+- **Email Management:**
+  - Archive, delete, and mark as spam
+  - Visual unread indicators
+  - Bulk email operations (coming soon)
+  - Email threading (coming soon)
+
+### ✅ **Advanced UI/UX Features**
+
+- **Loading States:**
+  - Skeleton loaders for smooth perceived performance
+  - Progressive loading of email content
+  - Optimistic UI updates
+- **Empty States:**
+  - Helpful empty inbox illustrations
+  - Guided onboarding for new users
+  - Contextual help messages
+
+- **Visual Enhancements:**
+  - Color-coded icons for different actions
+  - Smooth hover animations
+  - Consistent spacing and typography
+  - Toast notifications for user feedback
+
+### ✅ **Developer Experience**
+
+- **Monorepo Architecture:** Clean separation of concerns with Turborepo
+- **Type Safety:** Full TypeScript implementation
+- **Component Library:** Shared UI components across apps
+- **Hot Reloading:** Instant development feedback
+- **Code Quality:** ESLint, Prettier, and strict TypeScript configs
 
 ## Feature Roadmap
 
-We have a bold vision for Orai. Here's a look at the features we'll be implementing, one by one.
+We have a bold vision for Orai. Here's a detailed look at what's coming next.
 
-### Phase 1: The Foundation
+### Phase 3: Search & Discovery
 
-- [x] **Secure Gmail Integration:** Connect your Gmail account securely using OAuth.
-- [x] **Core Email Functionality:**
-  - [x] View, send, and receive emails.
-  - [x] Rich text editor for composing emails.
-  - [x] Support for attachments.
-  - [x] Archive, delete, and mark emails as spam.
+- [ ] **Advanced Search Engine**
+  - Full-text search across all emails
+  - Search by sender, subject, date ranges
+  - Smart search suggestions and autocomplete
+  - Search within attachments (PDF, DOC content)
+  - Saved search queries and filters
 
-### Phase 2: UI/UX Overhaul
+- [ ] **Smart Filtering & Organization**
+  - Quick filter buttons (Unread, Today, This Week, Important)
+  - Custom label creation and management
+  - Smart categorization (Primary, Social, Promotions)
+  - Advanced search operators (from:, has:attachment, etc.)
 
-- [ ] **Modern, Resizable Layout:** Implement a responsive, multi-column layout similar to modern email clients.
-- [ ] **Component-Based UI:** Rebuild the interface using our `shadcn/ui` and `Tailwind CSS` stack for a polished and consistent look.
-- [ ] **Theming:** Introduce support for both light and dark modes.
-- [ ] **Refined User Experience:** Add professional loading states, empty states, and improved visual feedback.
+### Phase 4: Enhanced Productivity
 
-### Phase 3: AI & Productivity
+- [ ] **Keyboard Shortcuts Suite**
+  - Gmail-style navigation (`j`/`k` for up/down)
+  - Quick actions (`r` reply, `a` archive, `d` delete)
+  - Compose shortcuts (`c` for new email)
+  - Search activation (`/` key)
+  - Help modal (`?` key) with shortcut reference
 
-- [ ] **AI-Powered Email Summarization:** Get the gist of long emails and threads in seconds.
-- [ ] **Smart Reply:** AI-generated reply suggestions that match your tone and context.
-- [ ] **Priority Inbox:** An intelligent system that automatically categorizes and prioritizes your emails.
-- [ ] **Natural Language Search:** Find any email by searching in plain English (e.g., "emails from last week about the project").
-- [ ] **Snooze & Reminders:** Snooze emails to have them reappear in your inbox at a later time.
+- [ ] **Draft Management**
+  - Auto-save drafts every 30 seconds
+  - Draft recovery on browser crash
+  - Multiple draft support
+  - Draft templates and snippets
+  - Version history for drafts
 
-### Phase 4: Power-User Features
+- [ ] **Email Templates & Signatures**
+  - Custom email signatures with HTML support
+  - Quick reply templates
+  - Dynamic template variables
+  - Team signature management
+  - Template sharing and collaboration
 
-- [ ] **Multi-Account Support:** Seamlessly switch between multiple Gmail accounts.
-- [ ] **Keyboard Shortcuts:** A comprehensive set of keyboard shortcuts for power users.
+### Phase 5: Advanced Email Features
 
-### Phase 5: The Ecosystem
+- [ ] **Thread Management**
+  - Conversation view with collapsible emails
+  - Smart thread splitting for topic changes
+  - Thread-level actions (archive all, mark all read)
+  - Quote trimming and smart reply context
 
-- [ ] **Calendar Integration:** A built-in calendar that syncs with your Google Calendar.
-- [ ] **Cross-Platform Mobile App:** A beautiful and performant mobile app for iOS and Android.
-- [ ] **Support for More Providers:** Adding support for Outlook, iCloud, and any IMAP account.
-- [ ] **End-to-End Encryption:** Optional PGP-based end-to-end encryption for maximum security.
+- [ ] **Attachment Enhancements**
+  - Drag-and-drop attachment uploads
+  - Inline image embedding
+  - Cloud storage integration (Google Drive, Dropbox)
+  - Attachment preview without download
+  - Bulk attachment download
+
+- [ ] **Email Scheduling & Snoozing**
+  - Schedule emails to send later
+  - Snooze emails to reappear at specific times
+  - Smart snooze suggestions (tomorrow morning, next week)
+  - Follow-up reminders for sent emails
+
+### Phase 6: AI & Intelligence
+
+- [ ] **AI-Powered Email Summarization**
+  - One-click email summaries for long messages
+  - Thread summaries for email conversations
+  - Key action items extraction
+  - Meeting details and calendar event suggestions
+
+- [ ] **Smart Reply & Compose**
+  - AI-generated reply suggestions matching your tone
+  - Smart compose with context awareness
+  - Email tone analysis and suggestions
+  - Grammar and spelling enhancement
+
+- [ ] **Priority Inbox & Smart Categorization**
+  - ML-based importance scoring
+  - VIP sender identification
+  - Automatic email categorization
+  - Smart notification filtering
+
+- [ ] **Natural Language Search**
+  - Search in plain English ("emails from Sarah last week about the project")
+  - Intent recognition and query expansion
+  - Semantic search beyond keyword matching
+  - Voice search integration (future)
+
+### Phase 7: Multi-Account & Integration
+
+- [ ] **Multi-Account Support**
+  - Seamless switching between Gmail accounts
+  - Unified inbox view across accounts
+  - Account-specific signatures and settings
+  - Cross-account email forwarding
+
+- [ ] **Calendar Integration**
+  - Built-in Google Calendar sync
+  - Meeting scheduling from emails
+  - Calendar event creation from email content
+  - Availability sharing and meeting coordination
+
+- [ ] **Contact Management**
+  - Integrated address book with Google Contacts
+  - Contact enrichment with social profiles
+  - Recent contact suggestions
+  - Contact grouping and tagging
+
+### Phase 8: Security & Privacy
+
+- [ ] **End-to-End Encryption**
+  - PGP key management interface
+  - Automatic encryption for known recipients
+  - Secure key exchange workflows
+  - Encrypted attachment support
+
+- [ ] **Advanced Privacy Controls**
+  - Email tracking pixel blocking
+  - Link protection and safe browsing
+  - Privacy-focused analytics (no user tracking)
+  - Local data encryption
+
+- [ ] **Security Features**
+  - Two-factor authentication
+  - Session management and remote logout
+  - Suspicious activity monitoring
+  - Secure backup and export
+
+### Phase 9: Mobile & Cross-Platform
+
+- [ ] **Native Mobile Apps**
+  - React Native iOS and Android apps
+  - Push notifications for new emails
+  - Offline reading and draft composition
+  - Biometric authentication
+
+- [ ] **Cross-Platform Sync**
+  - Real-time sync across all devices
+  - Unified read/unread status
+  - Cross-device draft synchronization
+  - Consistent user experience
+
+### Phase 10: Enterprise & Collaboration
+
+- [ ] **Team Features**
+  - Shared mailboxes and team inboxes
+  - Email delegation and shared access
+  - Team templates and signatures
+  - Collaborative email management
+
+- [ ] **Provider Expansion**
+  - Microsoft Outlook/Office 365 support
+  - iCloud Mail integration
+  - Generic IMAP/SMTP support
+  - Custom domain email hosting
+
+## Performance Metrics
+
+- **Load Time:** < 2 seconds for initial app load
+- **Email List:** Renders 1000+ emails smoothly
+- **Search:** Results in < 500ms for local search
+- **Memory Usage:** < 100MB for typical usage
+- **Bundle Size:** < 500KB initial JS bundle
+
+## Accessibility Features
+
+- **Keyboard Navigation:** Full app navigation without mouse
+- **Screen Reader Support:** ARIA labels and semantic HTML
+- **High Contrast Mode:** Support for OS-level accessibility settings
+- **Font Scaling:** Respects user font size preferences
+- **Color Blind Friendly:** Accessible color palette and contrast ratios
 
 ## Getting Started
 
@@ -92,24 +292,35 @@ To get started with developing Orai locally, follow these steps:
     pnpm install
     ```
 
-3.  **Run the development servers:**
+3.  **Set up environment variables:**
 
     ```bash
-    # Run the web app
-    pnpm dev --filter web
+    # Copy example environment files
+    cp apps/api/.env.example apps/api/.env
+    cp apps/web/.env.example apps/web/.env
 
-    # Run the API
-    pnpm dev --filter api
+    # Add your Google OAuth credentials and database URL
     ```
 
-The web app will be available at `http://localhost:3000` and the API at `http://localhost:3001`.
+4.  **Set up the database:**
 
-## Contributing
+    ```bash
+    # Run database migrations
+    pnpm db:migrate --filter api
 
-Orai is built by the community, for the community. We welcome all contributions, from bug fixes to new features. Please feel free to open an issue or submit a pull request.
+    # Seed with sample data (optional)
+    pnpm db:seed --filter api
+    ```
 
----
+5.  **Run the development servers:**
 
-<p align="center">
-  <strong>Join us in building the future of email.</strong>
-</p>
+    ```bash
+    # Run all services
+    pnpm dev
+
+    # Or run individually
+    pnpm dev --filter web    # Web app at http://localhost:3000
+    pnpm dev --filter api    # API server at http://localhost:3001
+    ```
+
+## Project Structure
