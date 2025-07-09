@@ -4,6 +4,7 @@ import prisma from "../lib/prisma";
 import { google } from "googleapis";
 import R2 from "../lib/r2";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { archiveEmail, markEmailAsSpam, trashEmail } from "../services/gmail";
 
 // A temporary way to get user ID from session. We will improve this.
 async function getUserIdFromSession(
@@ -39,6 +40,12 @@ export default async function (
     }
     // Attach userId to the request for other handlers to use
     (request as any).userId = userId;
+
+    // Also attach tokens for handlers that need to make API calls
+    const sessionId = request.unsignCookie(request.cookies.sessionId ?? "");
+    if (sessionId.valid && sessionId.value) {
+      (request as any).tokens = getTokens(sessionId.value);
+    }
   });
 
   server.get("/emails", async (request, reply) => {
@@ -88,6 +95,65 @@ export default async function (
         ...email,
         bodyHtml,
       };
+    }
+  );
+
+  server.post(
+    "/emails/:id/modify",
+    async (
+      request: FastifyRequest<{
+        Params: { id: string };
+        Body: { action: "archive" | "trash" | "spam" };
+      }>,
+      reply
+    ) => {
+      const userId = (request as any).userId;
+      const tokens = (request as any).tokens;
+      const { id } = request.params;
+      const { action } = request.body;
+
+      if (!tokens) {
+        return reply.status(401).send({ error: "Unauthorized: No tokens" });
+      }
+
+      const email = await prisma.email.findFirst({
+        where: { id: id, userId: userId },
+      });
+
+      if (!email || !email.gmailMessageId) {
+        return reply.status(404).send({ error: "Email not found" });
+      }
+
+      try {
+        switch (action) {
+          case "archive":
+            await archiveEmail(tokens, email.gmailMessageId);
+            await prisma.email.update({
+              where: { id: email.id },
+              data: { isArchived: true },
+            });
+            break;
+          case "trash":
+            await trashEmail(tokens, email.gmailMessageId);
+            // We'll remove the email from our DB once it's trashed in Gmail
+            await prisma.email.delete({ where: { id: email.id } });
+            break;
+          case "spam":
+            await markEmailAsSpam(tokens, email.gmailMessageId);
+            await prisma.email.update({
+              where: { id: email.id },
+              data: { isSpam: true, isArchived: true },
+            });
+            break;
+          default:
+            return reply.status(400).send({ error: "Invalid action" });
+        }
+
+        return reply.send({ success: true });
+      } catch (error) {
+        console.error(`Failed to ${action} email:`, error);
+        return reply.status(500).send({ error: `Failed to ${action} email` });
+      }
     }
   );
 }

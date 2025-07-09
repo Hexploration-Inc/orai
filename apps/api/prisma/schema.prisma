@@ -42,6 +42,8 @@ model Email {
   r2ObjectKey     String?   @map("r2_object_key")
 
   isRead          Boolean   @default(false)
+  isArchived      Boolean   @default(false)
+  isSpam          Boolean   @default(false)
   labels          String[]
   receivedAt      DateTime? @map("received_at")
 
