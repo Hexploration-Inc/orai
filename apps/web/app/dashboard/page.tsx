@@ -62,32 +62,40 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoadingEmail, setIsLoadingEmail] = useState(false);
 
-  const api = (url: string) =>
-    fetch(`http://localhost:3001/api${url}`, { credentials: "include" });
+  const api = (url: string, options?: RequestInit) =>
+    fetch(`http://localhost:3001/api${url}`, {
+      ...options,
+      credentials: "include",
+    });
+
+  const fetchEmails = async () => {
+    try {
+      const emailsRes = await api("/emails");
+      if (!emailsRes.ok) {
+        throw new Error("Failed to fetch emails.");
+      }
+      const emailsData = await emailsRes.json();
+      setEmails(emailsData);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchProfile = async () => {
       try {
-        const [profileRes, emailsRes] = await Promise.all([
-          api("/me"),
-          api("/emails"),
-        ]);
-
-        if (!profileRes.ok || !emailsRes.ok) {
-          throw new Error("Failed to fetch data. Are you logged in?");
+        const profileRes = await api("/me");
+        if (!profileRes.ok) {
+          throw new Error("Failed to fetch profile. Are you logged in?");
         }
-
-        const profileData = await profileRes.json();
-        const emailsData = await emailsRes.json();
-
-        setProfile(profileData);
-        setEmails(emailsData);
+        setProfile(await profileRes.json());
       } catch (err: any) {
         setError(err.message);
       }
     };
 
-    fetchData();
+    fetchProfile();
+    fetchEmails();
   }, []);
 
   const handleEmailSelect = async (id: string) => {
@@ -104,6 +112,29 @@ export default function DashboardPage() {
       setError(err.message);
     } finally {
       setIsLoadingEmail(false);
+    }
+  };
+
+  const handleModifyEmail = async (
+    id: string,
+    action: "archive" | "trash" | "spam"
+  ) => {
+    try {
+      const res = await api(`/emails/${id}/modify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to ${action} email.`);
+      }
+
+      // Refresh the email list
+      await fetchEmails();
+      setSelectedEmail(null); // Clear selection
+    } catch (err: any) {
+      setError(err.message);
     }
   };
 
@@ -145,6 +176,23 @@ export default function DashboardPage() {
           <p>Loading email...</p>
         ) : selectedEmail ? (
           <div>
+            <div style={{ marginBottom: "1rem", display: "flex", gap: "8px" }}>
+              <button
+                onClick={() => handleModifyEmail(selectedEmail.id, "archive")}
+              >
+                Archive
+              </button>
+              <button
+                onClick={() => handleModifyEmail(selectedEmail.id, "trash")}
+              >
+                Delete
+              </button>
+              <button
+                onClick={() => handleModifyEmail(selectedEmail.id, "spam")}
+              >
+                Spam
+              </button>
+            </div>
             <h3>{selectedEmail.subject}</h3>
             <p>
               <strong>From: </strong>

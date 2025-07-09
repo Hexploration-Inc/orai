@@ -24,7 +24,7 @@ export default async function (
     "/auth/google",
     async (request: FastifyRequest, reply: FastifyReply) => {
       const scopes = [
-        "https://www.googleapis.com/auth/gmail.readonly",
+        "https://www.googleapis.com/auth/gmail.modify", // Changed from .readonly
         "https://www.googleapis.com/auth/userinfo.email",
         "https://www.googleapis.com/auth/userinfo.profile",
       ];

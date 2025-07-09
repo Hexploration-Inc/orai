@@ -133,3 +133,56 @@ async function processAndSaveEmail(
     },
   });
 }
+
+/**
+ * Archives an email in Gmail.
+ * @param tokens The user's OAuth credentials.
+ * @param messageId The ID of the message to archive.
+ */
+
+export async function archiveEmail(tokens: Credentials, messageId: string) {
+  const auth = createOAuth2Client(tokens);
+  const gmail = google.gmail({ version: "v1", auth });
+
+  await gmail.users.messages.modify({
+    userId: "me",
+    id: messageId,
+    requestBody: {
+      removeLabelIds: ["INBOX"],
+    },
+  });
+}
+
+/**
+ * Moves an email to the trash in Gmail.
+ * @param tokens The user's OAuth credentials.
+ * @param messageId The ID of the message to trash.
+ */
+export async function trashEmail(tokens: Credentials, messageId: string) {
+  const auth = createOAuth2Client(tokens);
+  const gmail = google.gmail({ version: "v1", auth });
+
+  await gmail.users.messages.trash({
+    userId: "me",
+    id: messageId,
+  });
+}
+
+/**
+ * Marks an email as spam in Gmail.
+ * @param tokens The user's OAuth credentials.
+ * @param messageId The ID of the message to mark as spam.
+ */
+export async function markEmailAsSpam(tokens: Credentials, messageId: string) {
+  const auth = createOAuth2Client(tokens);
+  const gmail = google.gmail({ version: "v1", auth });
+
+  await gmail.users.messages.modify({
+    userId: "me",
+    id: messageId,
+    requestBody: {
+      addLabelIds: ["SPAM"],
+      removeLabelIds: ["INBOX"],
+    },
+  });
+}
