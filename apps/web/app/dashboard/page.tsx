@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
+import { Archive, Trash2, Mail } from "lucide-react";
 
-// Basic types for the data we'll be handling
+// Types
 interface UserProfile {
   email: string;
   name: string;
@@ -18,41 +20,77 @@ interface Email {
   bodyHtml?: string | null;
 }
 
-// A simple component to render the email list
+// Components
 const EmailList = ({
   emails,
   onEmailSelect,
+  selectedEmailId,
 }: {
   emails: Email[];
   onEmailSelect: (id: string) => void;
+  selectedEmailId: string | null;
 }) => (
-  <div style={{ borderRight: "1px solid #e0e0e0" }}>
-    <h2
-      style={{ padding: "16px", borderBottom: "1px solid #e0e0e0", margin: 0 }}
-    >
-      Inbox
-    </h2>
-    <ul>
+  <div className="h-full">
+    <div className="p-4 border-b">
+      <h2 className="text-xl font-bold">Inbox</h2>
+    </div>
+    <ul className="overflow-y-auto h-full pb-20">
       {emails.map((email) => (
         <li
           key={email.id}
           onClick={() => onEmailSelect(email.id)}
-          style={{
-            padding: "12px 16px",
-            borderBottom: "1px solid #f0f0f0",
-            cursor: "pointer",
-          }}
+          className={`p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 ${
+            selectedEmailId === email.id ? "bg-blue-100" : ""
+          }`}
         >
-          <p style={{ margin: 0, fontWeight: 500, color: "#000" }}>
+          <p className="font-semibold text-gray-800 truncate">
             {email.fromData?.name || email.fromData?.email || "Unknown Sender"}
           </p>
-          <p style={{ margin: "4px 0", fontWeight: 500 }}>{email.subject}</p>
-          <p style={{ margin: "4px 0 0", fontSize: "14px", color: "#666" }}>
-            {email.snippet}
-          </p>
+          <p className="font-medium text-gray-900 truncate">{email.subject}</p>
+          <p className="text-sm text-gray-500 truncate">{email.snippet}</p>
         </li>
       ))}
     </ul>
+  </div>
+);
+
+const EmailDetail = ({
+  email,
+  onModify,
+}: {
+  email: Email;
+  onModify: (id: string, action: "archive" | "trash" | "spam") => void;
+}) => (
+  <div className="h-full flex flex-col">
+    <div className="p-4 border-b flex items-center justify-between">
+      <div>
+        <h2 className="text-xl font-bold">{email.subject}</h2>
+        <p className="text-sm text-gray-600">
+          From: {email.fromData?.name || "Unknown"} &lt;
+          {email.fromData?.email}&gt;
+        </p>
+      </div>
+      <div className="flex items-center space-x-2">
+        <button
+          onClick={() => onModify(email.id, "archive")}
+          className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-full"
+          title="Archive"
+        >
+          <Archive size={20} />
+        </button>
+        <button
+          onClick={() => onModify(email.id, "trash")}
+          className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-full"
+          title="Trash"
+        >
+          <Trash2 size={20} />
+        </button>
+      </div>
+    </div>
+    <div
+      className="p-4 prose max-w-none flex-1 overflow-y-auto"
+      dangerouslySetInnerHTML={{ __html: email.bodyHtml || "" }}
+    />
   </div>
 );
 
@@ -77,7 +115,8 @@ const ComposeView = ({
     content: "",
     editorProps: {
       attributes: {
-        class: "prose dark:prose-invert focus:outline-none",
+        class:
+          "prose dark:prose-invert focus:outline-none min-h-[150px] max-w-full",
       },
     },
   });
@@ -89,71 +128,42 @@ const ComposeView = ({
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        bottom: 0,
-        right: "20px",
-        width: "500px",
-        height: "400px",
-        backgroundColor: "white",
-        border: "1px solid #ccc",
-        borderRadius: "8px 8px 0 0",
-        boxShadow: "0 0 10px rgba(0,0,0,0.2)",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <div
-        style={{
-          background: "#f1f1f1",
-          padding: "8px 12px",
-          display: "flex",
-          justifyContent: "space-between",
-        }}
-      >
-        <span>New Message</span>
-        <button onClick={onClose}>&times;</button>
+    <div className="fixed bottom-0 right-8 w-[500px] h-[400px] bg-white border border-gray-300 rounded-t-lg shadow-2xl flex flex-col">
+      <div className="bg-gray-100 px-4 py-2 flex justify-between items-center rounded-t-lg">
+        <span className="font-semibold">New Message</span>
+        <button onClick={onClose} className="text-gray-500 hover:text-gray-800">
+          &times;
+        </button>
       </div>
-      <input
-        type="email"
-        value={to}
-        onChange={(e) => setTo(e.target.value)}
-        placeholder="To"
-        style={{
-          padding: "8px",
-          border: "none",
-          borderBottom: "1px solid #ccc",
-        }}
-      />
-      <input
-        type="text"
-        value={subject}
-        onChange={(e) => setSubject(e.target.value)}
-        placeholder="Subject"
-        style={{
-          padding: "8px",
-          border: "none",
-          borderBottom: "1px solid #ccc",
-        }}
-      />
-      <div style={{ flex: 1, padding: "8px", overflowY: "auto" }}>
+      <div className="p-2 space-y-2">
+        <input
+          type="email"
+          value={to}
+          onChange={(e) => setTo(e.target.value)}
+          placeholder="To"
+          className="w-full px-2 py-1 border-b focus:outline-none"
+        />
+        <input
+          type="text"
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
+          placeholder="Subject"
+          className="w-full px-2 py-1 border-b focus:outline-none"
+        />
+      </div>
+      <div className="flex-1 p-2 overflow-y-auto">
         <EditorContent editor={editor} />
       </div>
-      <div style={{ padding: "8px 12px", borderTop: "1px solid #ccc" }}>
+      <div className="px-4 py-2 border-t">
         <input
           type="file"
           onChange={(e) => setAttachment(e.target.files?.[0])}
+          className="text-sm"
         />
       </div>
       <button
         onClick={handleSend}
-        style={{
-          padding: "12px",
-          background: "#4285F4",
-          color: "white",
-          border: "none",
-        }}
+        className="w-full py-3 bg-blue-600 text-white font-semibold hover:bg-blue-700"
       >
         Send
       </button>
@@ -207,6 +217,7 @@ export default function DashboardPage() {
   }, []);
 
   const handleEmailSelect = async (id: string) => {
+    if (selectedEmail?.id === id) return;
     setIsLoadingEmail(true);
     setSelectedEmail(null);
     try {
@@ -237,10 +248,8 @@ export default function DashboardPage() {
       if (!res.ok) {
         throw new Error(`Failed to ${action} email.`);
       }
-
-      // Refresh the email list
       await fetchEmails();
-      setSelectedEmail(null); // Clear selection
+      setSelectedEmail(null);
     } catch (err: any) {
       setError(err.message);
     }
@@ -252,15 +261,15 @@ export default function DashboardPage() {
     html: string;
     attachment?: File;
   }) => {
-    try {
-      const formData = new FormData();
-      formData.append("to", data.to);
-      formData.append("subject", data.subject);
-      formData.append("html", data.html);
-      if (data.attachment) {
-        formData.append("attachment", data.attachment);
-      }
+    const formData = new FormData();
+    formData.append("to", data.to);
+    formData.append("subject", data.subject);
+    formData.append("html", data.html);
+    if (data.attachment) {
+      formData.append("attachment", data.attachment);
+    }
 
+    try {
       const res = await api("/emails/send", {
         method: "POST",
         body: formData,
@@ -270,7 +279,7 @@ export default function DashboardPage() {
         throw new Error("Failed to send email.");
       }
 
-      setIsComposing(false); // Close compose window
+      setIsComposing(false);
       await fetchEmails(); // Refresh email list
     } catch (err: any) {
       setError(err.message);
@@ -279,98 +288,82 @@ export default function DashboardPage() {
 
   if (error) {
     return (
-      <div style={{ padding: "2rem" }}>
-        <h2>Error</h2>
-        <p>{error}</p>
-        <a href="/">Go to Homepage</a>
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-red-500">{error}</div>
       </div>
     );
   }
 
   if (!profile) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Loading profile...
+      </div>
+    );
   }
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "240px 1fr 2fr",
-        height: "100vh",
-      }}
-    >
-      {/* Column 1: Account Info */}
-      <div style={{ borderRight: "1px solid #e0e0e0", padding: "16px" }}>
-        <button
-          onClick={() => setIsComposing(true)}
-          style={{
-            width: "100%",
-            padding: "10px",
-            background: "#4285F4",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            marginBottom: "1rem",
-          }}
-        >
-          Compose
-        </button>
-        <h3>Accounts</h3>
-        <p>{profile.name}</p>
-        <p style={{ color: "#666" }}>{profile.email}</p>
-      </div>
+    <div className="h-screen bg-white">
+      <header className="flex items-center justify-between p-2 border-b">
+        <div className="font-semibold text-lg">Orai</div>
+        <div className="flex items-center space-x-4">
+          <span>{profile.email}</span>
+          <button
+            onClick={() => setIsComposing(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Compose
+          </button>
+        </div>
+      </header>
 
-      {/* Column 2: Email List */}
-      <EmailList emails={emails} onEmailSelect={handleEmailSelect} />
-
-      {/* Column 3: Detailed Email View */}
-      <div style={{ padding: "16px", overflowY: "auto" }}>
-        {isLoadingEmail ? (
-          <p>Loading email...</p>
-        ) : selectedEmail ? (
-          <div>
-            <div style={{ marginBottom: "1rem", display: "flex", gap: "8px" }}>
-              <button
-                onClick={() => handleModifyEmail(selectedEmail.id, "archive")}
-              >
-                Archive
-              </button>
-              <button
-                onClick={() => handleModifyEmail(selectedEmail.id, "trash")}
-              >
-                Delete
-              </button>
-              <button
-                onClick={() => handleModifyEmail(selectedEmail.id, "spam")}
-              >
-                Spam
-              </button>
+      <PanelGroup direction="horizontal" className="h-[calc(100vh-57px)]">
+        <Panel defaultSize={20} minSize={15}>
+          <div className="p-4 h-full">
+            <h3 className="font-semibold">Folders</h3>
+            {/* Placeholder for mailboxes */}
+            <div className="mt-4 space-y-2">
+              <div className="flex items-center space-x-2 p-2 bg-blue-100 rounded-md">
+                <Mail size={18} />
+                <span>Inbox</span>
+              </div>
             </div>
-            <h3>{selectedEmail.subject}</h3>
-            <p>
-              <strong>From: </strong>
-              {selectedEmail.fromData?.name} ({selectedEmail.fromData?.email})
-            </p>
-            <hr />
-            {/* 
-              TODO: Sanitize this HTML to prevent XSS attacks.
-              Using a library like DOMPurify is highly recommended.
-              Example: <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedEmail.bodyHtml) }} />
-            */}
-            <div
-              dangerouslySetInnerHTML={{ __html: selectedEmail.bodyHtml ?? "" }}
-            />
           </div>
-        ) : (
-          <p>Select an email to view its content.</p>
-        )}
-        {isComposing && (
-          <ComposeView
-            onSend={handleSendEmail}
-            onClose={() => setIsComposing(false)}
+        </Panel>
+        <PanelResizeHandle className="w-px bg-gray-200" />
+        <Panel defaultSize={30} minSize={20}>
+          <EmailList
+            emails={emails}
+            onEmailSelect={handleEmailSelect}
+            selectedEmailId={selectedEmail?.id || null}
           />
-        )}
-      </div>
+        </Panel>
+        <PanelResizeHandle className="w-px bg-gray-200" />
+        <Panel defaultSize={50} minSize={30}>
+          <div className="h-full">
+            {isLoadingEmail && (
+              <div className="flex items-center justify-center h-full">
+                Loading email...
+              </div>
+            )}
+            {!isLoadingEmail && !selectedEmail && (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                Select an email to read
+              </div>
+            )}
+            {!isLoadingEmail && selectedEmail && (
+              <EmailDetail email={selectedEmail} onModify={handleModifyEmail} />
+            )}
+          </div>
+        </Panel>
+      </PanelGroup>
+
+      {isComposing && (
+        <ComposeView
+          onSend={handleSendEmail}
+          onClose={() => setIsComposing(false)}
+        />
+      )}
     </div>
   );
 }
