@@ -14,8 +14,6 @@ import {
   MailOpen,
   Bold,
   Italic,
-  List,
-  ListOrdered,
   Link as LinkIcon,
   Paperclip,
   X,
@@ -38,9 +36,6 @@ import { ThemeToggle } from "@/app/components/theme-toggle";
 // TipTap extensions
 import TextStyle from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
-import ListItem from "@tiptap/extension-list-item";
-import BulletList from "@tiptap/extension-bullet-list";
-import OrderedList from "@tiptap/extension-ordered-list";
 import Link from "@tiptap/extension-link";
 
 // Types
@@ -309,8 +304,17 @@ const EditorToolbar = ({ editor }: { editor: any }) => {
   const addLink = () => {
     const url = window.prompt("Enter URL:");
     if (url) {
-      editor.chain().focus().setLink({ href: url }).run();
+      editor
+        .chain()
+        .focus()
+        .extendMarkRange("link")
+        .setLink({ href: url })
+        .run();
     }
+  };
+
+  const removeLink = () => {
+    editor.chain().focus().extendMarkRange("link").unsetLink().run();
   };
 
   return (
@@ -341,43 +345,23 @@ const EditorToolbar = ({ editor }: { editor: any }) => {
 
       <div className="w-px h-6 bg-border mx-1" />
 
-      <button
-        onClick={() => editor.chain().focus().toggleBulletList().run()}
-        className={`p-2 rounded hover:bg-muted transition-colors ${
-          editor.isActive("bulletList")
-            ? "bg-muted text-foreground"
-            : "text-muted-foreground"
-        }`}
-        title="Bullet List"
-      >
-        <List size={16} />
-      </button>
-
-      <button
-        onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        className={`p-2 rounded hover:bg-muted transition-colors ${
-          editor.isActive("orderedList")
-            ? "bg-muted text-foreground"
-            : "text-muted-foreground"
-        }`}
-        title="Numbered List"
-      >
-        <ListOrdered size={16} />
-      </button>
-
-      <div className="w-px h-6 bg-border mx-1" />
-
-      <button
-        onClick={addLink}
-        className={`p-2 rounded hover:bg-muted transition-colors ${
-          editor.isActive("link")
-            ? "bg-muted text-foreground"
-            : "text-muted-foreground"
-        }`}
-        title="Add Link"
-      >
-        <LinkIcon size={16} />
-      </button>
+      {editor.isActive("link") ? (
+        <button
+          onClick={removeLink}
+          className="p-2 rounded hover:bg-muted transition-colors bg-muted text-foreground"
+          title="Remove Link"
+        >
+          <LinkIcon size={16} />
+        </button>
+      ) : (
+        <button
+          onClick={addLink}
+          className="p-2 rounded hover:bg-muted transition-colors text-muted-foreground"
+          title="Add Link"
+        >
+          <LinkIcon size={16} />
+        </button>
+      )}
 
       <div className="flex-1" />
 
@@ -387,14 +371,11 @@ const EditorToolbar = ({ editor }: { editor: any }) => {
           if (value === "paragraph") {
             editor.chain().focus().setParagraph().run();
           } else {
-            editor
-              .chain()
-              .focus()
-              .toggleHeading({ level: parseInt(value) })
-              .run();
+            const level = parseInt(value);
+            editor.chain().focus().toggleHeading({ level }).run();
           }
         }}
-        className="text-xs bg-transparent border-none focus:outline-none text-muted-foreground"
+        className="text-xs bg-transparent border border-border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-ring text-muted-foreground"
         value={
           editor.isActive("heading", { level: 1 })
             ? "1"
@@ -437,14 +418,18 @@ const ComposeView = ({
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        bulletList: false,
+        orderedList: false,
+        listItem: false,
+      }),
       TextStyle,
       Color,
-      ListItem,
-      BulletList,
-      OrderedList,
       Link.configure({
         openOnClick: false,
+        HTMLAttributes: {
+          class: "text-blue-600 hover:text-blue-800 underline",
+        },
       }),
     ],
     content: "",
@@ -464,7 +449,6 @@ const ComposeView = ({
         html: editor.getHTML(),
         attachment,
       });
-      // Reset form
       setTo("");
       setSubject("");
       setAttachment(undefined);
@@ -795,10 +779,9 @@ export default function DashboardPage() {
       }
       const data = await res.json();
 
-      // Add mock date field
       const emailsWithDate = data.map((email: any) => ({
         ...email,
-        date: "Apr 22", // Mock date
+        date: "Apr 22",
       }));
 
       setEmails(emailsWithDate);
@@ -832,7 +815,6 @@ export default function DashboardPage() {
     setSelectedEmail(null);
     setShowMobileDetail(true);
 
-    // Mark as read immediately for better UX
     setEmails(emails.map((e) => (e.id === id ? { ...e, isRead: true } : e)));
 
     try {
@@ -991,7 +973,6 @@ export default function DashboardPage() {
         </Panel>
       </PanelGroup>
 
-      {/* Mobile Email Detail Overlay */}
       {showMobileDetail && (
         <MobileEmailDetail
           email={selectedEmail}
@@ -1001,7 +982,6 @@ export default function DashboardPage() {
         />
       )}
 
-      {/* Mobile compose overlay */}
       {isComposing && (
         <div className="lg:hidden">
           <ComposeView
