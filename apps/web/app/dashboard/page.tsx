@@ -128,6 +128,7 @@ const EmptyEmailDetail = () => (
 );
 
 // Components
+// Update the MailboxNav component with colored icons
 const MailboxNav = ({ mailboxes }: { mailboxes: Mailbox[] }) => (
   <div className="p-4 space-y-2">
     <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
@@ -135,6 +136,20 @@ const MailboxNav = ({ mailboxes }: { mailboxes: Mailbox[] }) => (
     </h2>
     {mailboxes.map((mailbox) => {
       const Icon = mailbox.icon;
+      // Define colors for different mailbox types
+      const getIconColor = (name: string) => {
+        switch (name.toLowerCase()) {
+          case "inbox":
+            return "text-blue-500";
+          case "sent":
+            return "text-green-500";
+          case "archive":
+            return "text-amber-500";
+          default:
+            return "text-muted-foreground";
+        }
+      };
+
       return (
         <div
           key={mailbox.name}
@@ -145,7 +160,7 @@ const MailboxNav = ({ mailboxes }: { mailboxes: Mailbox[] }) => (
           }`}
         >
           <div className="flex items-center space-x-3">
-            <Icon size={18} />
+            <Icon size={18} className={getIconColor(mailbox.name)} />
             <span className="text-sm font-medium">{mailbox.name}</span>
           </div>
           {mailbox.count !== undefined && (
@@ -227,6 +242,7 @@ const EmailList = ({
   );
 };
 
+// Update the EmailDetail component with colored action icons
 const EmailDetail = ({
   email,
   onModify,
@@ -266,7 +282,7 @@ const EmailDetail = ({
               <TooltipTrigger asChild>
                 <button
                   onClick={() => onModify(email.id, "archive")}
-                  className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                  className="p-2.5 text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20 rounded-lg transition-colors"
                 >
                   <Archive size={18} />
                 </button>
@@ -277,7 +293,7 @@ const EmailDetail = ({
               <TooltipTrigger asChild>
                 <button
                   onClick={() => onModify(email.id, "trash")}
-                  className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                  className="p-2.5 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors"
                 >
                   <Trash2 size={18} />
                 </button>
@@ -295,7 +311,7 @@ const EmailDetail = ({
   );
 };
 
-// Editor toolbar
+// Update the EditorToolbar component with colored formatting icons
 const EditorToolbar = ({ editor }: { editor: any }) => {
   if (!editor) {
     return null;
@@ -323,8 +339,8 @@ const EditorToolbar = ({ editor }: { editor: any }) => {
         onClick={() => editor.chain().focus().toggleBold().run()}
         className={`p-2 rounded hover:bg-muted transition-colors ${
           editor.isActive("bold")
-            ? "bg-muted text-foreground"
-            : "text-muted-foreground"
+            ? "bg-blue-100 dark:bg-blue-950/30 text-blue-600"
+            : "text-muted-foreground hover:text-blue-600"
         }`}
         title="Bold"
       >
@@ -335,8 +351,8 @@ const EditorToolbar = ({ editor }: { editor: any }) => {
         onClick={() => editor.chain().focus().toggleItalic().run()}
         className={`p-2 rounded hover:bg-muted transition-colors ${
           editor.isActive("italic")
-            ? "bg-muted text-foreground"
-            : "text-muted-foreground"
+            ? "bg-purple-100 dark:bg-purple-950/30 text-purple-600"
+            : "text-muted-foreground hover:text-purple-600"
         }`}
         title="Italic"
       >
@@ -348,7 +364,7 @@ const EditorToolbar = ({ editor }: { editor: any }) => {
       {editor.isActive("link") ? (
         <button
           onClick={removeLink}
-          className="p-2 rounded hover:bg-muted transition-colors bg-muted text-foreground"
+          className="p-2 rounded hover:bg-muted transition-colors bg-green-100 dark:bg-green-950/30 text-green-600"
           title="Remove Link"
         >
           <LinkIcon size={16} />
@@ -356,41 +372,12 @@ const EditorToolbar = ({ editor }: { editor: any }) => {
       ) : (
         <button
           onClick={addLink}
-          className="p-2 rounded hover:bg-muted transition-colors text-muted-foreground"
+          className="p-2 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-green-600"
           title="Add Link"
         >
           <LinkIcon size={16} />
         </button>
       )}
-
-      <div className="flex-1" />
-
-      <select
-        onChange={(e) => {
-          const value = e.target.value;
-          if (value === "paragraph") {
-            editor.chain().focus().setParagraph().run();
-          } else {
-            const level = parseInt(value);
-            editor.chain().focus().toggleHeading({ level }).run();
-          }
-        }}
-        className="text-xs bg-transparent border border-border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-ring text-muted-foreground"
-        value={
-          editor.isActive("heading", { level: 1 })
-            ? "1"
-            : editor.isActive("heading", { level: 2 })
-              ? "2"
-              : editor.isActive("heading", { level: 3 })
-                ? "3"
-                : "paragraph"
-        }
-      >
-        <option value="paragraph">Paragraph</option>
-        <option value="1">Heading 1</option>
-        <option value="2">Heading 2</option>
-        <option value="3">Heading 3</option>
-      </select>
     </div>
   );
 };
@@ -523,7 +510,7 @@ const ComposeView = ({
               />
               <label
                 htmlFor="attachment-panel"
-                className="flex items-center space-x-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md cursor-pointer transition-colors"
+                className="flex items-center space-x-2 px-3 py-2 text-sm text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20 rounded-md cursor-pointer transition-colors"
               >
                 <Paperclip size={16} />
                 <span>Attach file</span>
@@ -655,7 +642,7 @@ const ComposeView = ({
             />
             <label
               htmlFor="attachment-mobile"
-              className="flex items-center space-x-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md cursor-pointer transition-colors"
+              className="flex items-center space-x-2 px-3 py-2 text-sm text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20 rounded-md cursor-pointer transition-colors"
             >
               <Paperclip size={16} />
               <span>Attach file</span>
@@ -686,7 +673,7 @@ const ComposeView = ({
   );
 };
 
-// Mobile email detail
+// Update the MobileEmailDetail component with colored action icons
 const MobileEmailDetail = ({
   email,
   onModify,
@@ -711,20 +698,20 @@ const MobileEmailDetail = ({
       <div className="flex items-center justify-between px-4 py-3 border-b">
         <button
           onClick={onBack}
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
+          className="p-2 hover:bg-muted rounded-lg transition-colors text-blue-500"
         >
           ←
         </button>
         <div className="flex items-center space-x-2">
           <button
             onClick={() => onModify(email.id, "archive")}
-            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+            className="p-2 text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20 rounded-lg transition-colors"
           >
             <Archive size={18} />
           </button>
           <button
             onClick={() => onModify(email.id, "trash")}
-            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+            className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors"
           >
             <Trash2 size={18} />
           </button>
@@ -809,8 +796,15 @@ export default function DashboardPage() {
     fetchEmails();
   }, []);
 
+  // Update the handleEmailSelect function to close composer when selecting an email
   const handleEmailSelect = async (id: string) => {
     if (selectedEmail?.id === id) return;
+
+    // Close composer if it's open when selecting an email
+    if (isComposing) {
+      setIsComposing(false);
+    }
+
     setIsLoadingEmail(true);
     setSelectedEmail(null);
     setShowMobileDetail(true);
