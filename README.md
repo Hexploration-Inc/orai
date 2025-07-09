@@ -44,11 +44,9 @@ We have a bold vision for Orai. Here's a look at the features we'll be implement
 - [x] **Secure Gmail Integration:** Connect your Gmail account securely using OAuth.
 - [x] **Core Email Functionality:**
   - [x] View, send, and receive emails.
-  - [ ] Rich text editor for composing emails.
-  - [ ] Support for attachments.
-  - [ ] Archive, delete, and mark emails as spam.
-- [ ] **Multi-Account Support:** Seamlessly switch between multiple Gmail accounts.
-- [ ] **Keyboard Shortcuts:** A comprehensive set of keyboard shortcuts for power users.
+  - [x] Rich text editor for composing emails.
+  - [x] Support for attachments.
+  - [x] Archive, delete, and mark emails as spam.
 
 ### Phase 2: UI/UX Overhaul
 
@@ -65,7 +63,12 @@ We have a bold vision for Orai. Here's a look at the features we'll be implement
 - [ ] **Natural Language Search:** Find any email by searching in plain English (e.g., "emails from last week about the project").
 - [ ] **Snooze & Reminders:** Snooze emails to have them reappear in your inbox at a later time.
 
-### Phase 4: The Ecosystem
+### Phase 4: Power-User Features
+
+- [ ] **Multi-Account Support:** Seamlessly switch between multiple Gmail accounts.
+- [ ] **Keyboard Shortcuts:** A comprehensive set of keyboard shortcuts for power users.
+
+### Phase 5: The Ecosystem
 
 - [ ] **Calendar Integration:** A built-in calendar that syncs with your Google Calendar.
 - [ ] **Cross-Platform Mobile App:** A beautiful and performant mobile app for iOS and Android.
