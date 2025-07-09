@@ -10,6 +10,8 @@ import {
   sendEmail,
   trashEmail,
 } from "../services/gmail";
+import { MultipartFile } from "@fastify/multipart";
+import Mail from "nodemailer/lib/mailer";
 
 // A temporary way to get user ID from session. We will improve this.
 async function getUserIdFromSession(
@@ -162,28 +164,46 @@ export default async function (
     }
   );
 
-  server.post(
-    "/emails/send",
-    async (
-      request: FastifyRequest<{
-        Body: { to: string; subject: string; html: string };
-      }>,
-      reply
-    ) => {
-      const tokens = (request as any).tokens;
-      const { to, subject, html } = request.body;
+  server.post("/emails/send", async (request: FastifyRequest, reply) => {
+    const tokens = (request as any).tokens;
+    if (!tokens) {
+      return reply.status(401).send({ error: "Unauthorized: No tokens" });
+    }
 
-      if (!tokens) {
-        return reply.status(401).send({ error: "Unauthorized: No tokens" });
-      }
+    if (!request.isMultipart()) {
+      return reply.status(400).send({ error: "Request is not multipart" });
+    }
 
-      try {
-        await sendEmail(tokens, { to, subject, html });
-        return reply.send({ success: true });
-      } catch (error) {
-        console.error("Failed to send email:", error);
-        return reply.status(500).send({ error: "Failed to send email" });
+    let to, subject, html;
+    const attachments: Mail.Attachment[] = [];
+
+    const parts = request.parts();
+    for await (const part of parts) {
+      if (part.type === "file") {
+        attachments.push({
+          filename: part.filename,
+          content: await part.toBuffer(),
+          contentType: part.mimetype,
+        });
+      } else {
+        if (part.fieldname === "to") to = part.value as string;
+        if (part.fieldname === "subject") subject = part.value as string;
+        if (part.fieldname === "html") html = part.value as string;
       }
     }
-  );
+
+    if (!to || !subject || !html) {
+      return reply
+        .status(400)
+        .send({ error: "Missing required fields: to, subject, html" });
+    }
+
+    try {
+      await sendEmail(tokens, { to, subject, html, attachments });
+      return reply.send({ success: true });
+    } catch (error) {
+      console.error("Failed to send email:", error);
+      return reply.status(500).send({ error: "Failed to send email" });
+    }
+  });
 }

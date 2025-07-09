@@ -60,11 +60,18 @@ const ComposeView = ({
   onSend,
   onClose,
 }: {
-  onSend: (data: { to: string; subject: string; html: string }) => void;
+  onSend: (data: {
+    to: string;
+    subject: string;
+    html: string;
+    attachment?: File;
+  }) => void;
   onClose: () => void;
 }) => {
   const [to, setTo] = useState("");
   const [subject, setSubject] = useState("");
+  const [attachment, setAttachment] = useState<File | undefined>();
+
   const editor = useEditor({
     extensions: [StarterKit],
     content: "",
@@ -77,7 +84,7 @@ const ComposeView = ({
 
   const handleSend = () => {
     if (editor) {
-      onSend({ to, subject, html: editor.getHTML() });
+      onSend({ to, subject, html: editor.getHTML(), attachment });
     }
   };
 
@@ -132,6 +139,12 @@ const ComposeView = ({
       />
       <div style={{ flex: 1, padding: "8px", overflowY: "auto" }}>
         <EditorContent editor={editor} />
+      </div>
+      <div style={{ padding: "8px 12px", borderTop: "1px solid #ccc" }}>
+        <input
+          type="file"
+          onChange={(e) => setAttachment(e.target.files?.[0])}
+        />
       </div>
       <button
         onClick={handleSend}
@@ -237,12 +250,20 @@ export default function DashboardPage() {
     to: string;
     subject: string;
     html: string;
+    attachment?: File;
   }) => {
     try {
+      const formData = new FormData();
+      formData.append("to", data.to);
+      formData.append("subject", data.subject);
+      formData.append("html", data.html);
+      if (data.attachment) {
+        formData.append("attachment", data.attachment);
+      }
+
       const res = await api("/emails/send", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: formData,
       });
 
       if (!res.ok) {

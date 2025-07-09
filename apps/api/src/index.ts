@@ -2,6 +2,7 @@ import "dotenv/config";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import cookie from "@fastify/cookie";
+import multipart from "@fastify/multipart";
 import authRoutes from "./routes/auth";
 import apiRoutes from "./routes/api";
 import emailRoutes from "./routes/emails";
@@ -18,6 +19,8 @@ server.register(cors, {
 server.register(cookie, {
   secret: process.env.COOKIE_SECRET,
 });
+
+server.register(multipart);
 
 server.get("/", async (request, reply) => {
   return { hello: "world" };
