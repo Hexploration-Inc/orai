@@ -177,10 +177,8 @@ const EmailList = ({
 
   return (
     <div className="h-full">
-      <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-800">
-        <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
-          Inbox
-        </h2>
+      <div className="px-6 py-4 border-b">
+        <h2 className="text-xl font-bold">Inbox</h2>
       </div>
       <div className="overflow-y-auto h-full pb-20">
         {emails.map((email) => {
@@ -190,10 +188,8 @@ const EmailList = ({
             <div key={email.id}>
               <div
                 onClick={() => onEmailSelect(email.id)}
-                className={`flex items-start px-6 py-4 cursor-pointer group hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors ${
-                  selectedEmailId === email.id
-                    ? "bg-neutral-100 dark:bg-neutral-800"
-                    : ""
+                className={`flex items-start px-6 py-4 cursor-pointer group hover:bg-muted/50 transition-colors ${
+                  selectedEmailId === email.id ? "bg-accent" : ""
                 }`}
               >
                 <div className="w-5 flex-shrink-0 mr-4">
@@ -206,8 +202,8 @@ const EmailList = ({
                     <p
                       className={`truncate text-sm font-medium leading-5 ${
                         email.isRead
-                          ? "text-neutral-600 dark:text-neutral-400"
-                          : "text-neutral-900 dark:text-neutral-100 font-semibold"
+                          ? "text-muted-foreground"
+                          : "text-foreground font-semibold"
                       }`}
                     >
                       {fromName}
@@ -215,9 +211,9 @@ const EmailList = ({
                     <span
                       className={`text-xs flex-shrink-0 ml-4 ${
                         email.isRead
-                          ? "text-neutral-400 dark:text-neutral-500"
-                          : "text-neutral-600 dark:text-neutral-300 font-medium"
-                      } group-hover:text-neutral-700 dark:group-hover:text-neutral-200`}
+                          ? "text-muted-foreground"
+                          : "text-foreground font-medium"
+                      } group-hover:text-foreground`}
                     >
                       {email.date}
                     </span>
@@ -225,13 +221,13 @@ const EmailList = ({
                   <p
                     className={`truncate text-sm mb-1 leading-5 ${
                       email.isRead
-                        ? "text-neutral-600 dark:text-neutral-400"
-                        : "font-semibold text-neutral-900 dark:text-neutral-100"
+                        ? "text-muted-foreground"
+                        : "font-semibold text-foreground"
                     }`}
                   >
                     {email.subject}
                   </p>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-500 truncate leading-4">
+                  <p className="text-xs text-muted-foreground truncate leading-4">
                     {email.snippet}
                   </p>
                 </div>
@@ -392,6 +388,69 @@ const ComposeView = ({
   );
 };
 
+const MobileEmailDetail = ({
+  email,
+  onModify,
+  onBack,
+  isLoading,
+}: {
+  email: Email | null;
+  onModify: (id: string, action: "archive" | "trash" | "spam") => void;
+  onBack: () => void;
+  isLoading: boolean;
+}) => {
+  if (isLoading) {
+    return <EmailDetailSkeleton />;
+  }
+
+  if (!email) {
+    return null;
+  }
+
+  return (
+    <div className="fixed inset-0 bg-white dark:bg-neutral-950 z-50 lg:hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-800">
+        <button
+          onClick={onBack}
+          className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+        >
+          ←
+        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => onModify(email.id, "archive")}
+            className="p-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+          >
+            <Archive size={18} />
+          </button>
+          <button
+            onClick={() => onModify(email.id, "trash")}
+            className="p-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
+      </div>
+      <div className="px-4 py-4">
+        <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-2">
+          {email.subject}
+        </h2>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+          From:{" "}
+          <span className="font-medium">
+            {email.fromData?.name || "Unknown"}
+          </span>{" "}
+          &lt;{email.fromData?.email}&gt;
+        </p>
+      </div>
+      <div
+        className="px-4 prose dark:prose-invert max-w-none flex-1 overflow-y-auto prose-sm"
+        dangerouslySetInnerHTML={{ __html: email.bodyHtml || "" }}
+      />
+    </div>
+  );
+};
+
 // The main dashboard component
 export default function DashboardPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -401,6 +460,7 @@ export default function DashboardPage() {
   const [isLoadingEmails, setIsLoadingEmails] = useState(true);
   const [isLoadingEmail, setIsLoadingEmail] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
+  const [showMobileDetail, setShowMobileDetail] = useState(false);
 
   // MOCK DATA: For mailboxes
   const mailboxes: Mailbox[] = [
@@ -463,6 +523,7 @@ export default function DashboardPage() {
     if (selectedEmail?.id === id) return;
     setIsLoadingEmail(true);
     setSelectedEmail(null);
+    setShowMobileDetail(true); // Show mobile detail on selection
 
     // Mark as read on the frontend immediately for better UX
     setEmails(emails.map((e) => (e.id === id ? { ...e, isRead: true } : e)));
@@ -564,36 +625,40 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="h-screen bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100">
-      <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950">
-        <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
-          Orai
-        </h1>
-        <div className="flex items-center space-x-4">
-          <Avatar>
-            <AvatarFallback className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-semibold">
-              {getInitials(profile.name)}
-            </AvatarFallback>
-          </Avatar>
+    <div className="h-screen bg-background text-foreground">
+      <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b bg-background">
+        <h1 className="text-lg sm:text-xl font-bold">Orai</h1>
+        <div className="flex items-center space-x-2 sm:space-x-4">
+          <div className="hidden sm:flex">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="bg-muted text-muted-foreground font-semibold text-sm">
+                {getInitials(profile.name)}
+              </AvatarFallback>
+            </Avatar>
+          </div>
           <ThemeToggle />
           <button
             onClick={() => setIsComposing(true)}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-background"
           >
-            Compose
+            <span className="hidden sm:inline">Compose</span>
+            <span className="sm:hidden">+</span>
           </button>
         </div>
       </header>
 
-      <PanelGroup direction="horizontal" className="h-[calc(100vh-73px)]">
-        <Panel defaultSize={20} minSize={15}>
-          <div className="bg-white dark:bg-neutral-950 h-full">
+      <PanelGroup
+        direction="horizontal"
+        className="h-[calc(100vh-57px)] sm:h-[calc(100vh-73px)]"
+      >
+        <Panel defaultSize={20} minSize={15} className="hidden md:block">
+          <div className="bg-background h-full">
             <MailboxNav mailboxes={mailboxes} />
           </div>
         </Panel>
-        <PanelResizeHandle className="w-px bg-neutral-200 dark:bg-neutral-800 hover:w-px hover:bg-blue-500 transition-colors" />
-        <Panel defaultSize={30} minSize={20}>
-          <div className="bg-white dark:bg-neutral-950 h-full">
+        <PanelResizeHandle className="w-px bg-border hover:w-px hover:bg-blue-500 transition-colors hidden md:block" />
+        <Panel defaultSize={30} minSize={20} className="md:defaultSize-30">
+          <div className="bg-background h-full">
             <EmailList
               emails={emails}
               onEmailSelect={handleEmailSelect}
@@ -602,9 +667,9 @@ export default function DashboardPage() {
             />
           </div>
         </Panel>
-        <PanelResizeHandle className="w-px bg-neutral-200 dark:bg-neutral-800 hover:w-px hover:bg-blue-500 transition-colors" />
-        <Panel defaultSize={50} minSize={30}>
-          <div className="h-full bg-white dark:bg-neutral-950">
+        <PanelResizeHandle className="w-px bg-border hover:w-px hover:bg-blue-500 transition-colors hidden lg:block" />
+        <Panel defaultSize={50} minSize={30} className="hidden lg:block">
+          <div className="h-full bg-background">
             <EmailDetail
               email={selectedEmail}
               onModify={handleModifyEmail}
@@ -613,6 +678,16 @@ export default function DashboardPage() {
           </div>
         </Panel>
       </PanelGroup>
+
+      {/* Mobile Email Detail Overlay */}
+      {showMobileDetail && (
+        <MobileEmailDetail
+          email={selectedEmail}
+          onModify={handleModifyEmail}
+          onBack={() => setShowMobileDetail(false)}
+          isLoading={isLoadingEmail}
+        />
+      )}
 
       {isComposing && (
         <ComposeView
