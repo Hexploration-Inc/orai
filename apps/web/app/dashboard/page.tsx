@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 
 // Basic types for the data we'll be handling
 interface UserProfile {
@@ -54,6 +56,98 @@ const EmailList = ({
   </div>
 );
 
+const ComposeView = ({
+  onSend,
+  onClose,
+}: {
+  onSend: (data: { to: string; subject: string; html: string }) => void;
+  onClose: () => void;
+}) => {
+  const [to, setTo] = useState("");
+  const [subject, setSubject] = useState("");
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: "",
+    editorProps: {
+      attributes: {
+        class: "prose dark:prose-invert focus:outline-none",
+      },
+    },
+  });
+
+  const handleSend = () => {
+    if (editor) {
+      onSend({ to, subject, html: editor.getHTML() });
+    }
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        bottom: 0,
+        right: "20px",
+        width: "500px",
+        height: "400px",
+        backgroundColor: "white",
+        border: "1px solid #ccc",
+        borderRadius: "8px 8px 0 0",
+        boxShadow: "0 0 10px rgba(0,0,0,0.2)",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <div
+        style={{
+          background: "#f1f1f1",
+          padding: "8px 12px",
+          display: "flex",
+          justifyContent: "space-between",
+        }}
+      >
+        <span>New Message</span>
+        <button onClick={onClose}>&times;</button>
+      </div>
+      <input
+        type="email"
+        value={to}
+        onChange={(e) => setTo(e.target.value)}
+        placeholder="To"
+        style={{
+          padding: "8px",
+          border: "none",
+          borderBottom: "1px solid #ccc",
+        }}
+      />
+      <input
+        type="text"
+        value={subject}
+        onChange={(e) => setSubject(e.target.value)}
+        placeholder="Subject"
+        style={{
+          padding: "8px",
+          border: "none",
+          borderBottom: "1px solid #ccc",
+        }}
+      />
+      <div style={{ flex: 1, padding: "8px", overflowY: "auto" }}>
+        <EditorContent editor={editor} />
+      </div>
+      <button
+        onClick={handleSend}
+        style={{
+          padding: "12px",
+          background: "#4285F4",
+          color: "white",
+          border: "none",
+        }}
+      >
+        Send
+      </button>
+    </div>
+  );
+};
+
 // The main dashboard component
 export default function DashboardPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -61,6 +155,7 @@ export default function DashboardPage() {
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoadingEmail, setIsLoadingEmail] = useState(false);
+  const [isComposing, setIsComposing] = useState(false);
 
   const api = (url: string, options?: RequestInit) =>
     fetch(`http://localhost:3001/api${url}`, {
@@ -138,6 +233,29 @@ export default function DashboardPage() {
     }
   };
 
+  const handleSendEmail = async (data: {
+    to: string;
+    subject: string;
+    html: string;
+  }) => {
+    try {
+      const res = await api("/emails/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to send email.");
+      }
+
+      setIsComposing(false); // Close compose window
+      await fetchEmails(); // Refresh email list
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
   if (error) {
     return (
       <div style={{ padding: "2rem" }}>
@@ -162,6 +280,20 @@ export default function DashboardPage() {
     >
       {/* Column 1: Account Info */}
       <div style={{ borderRight: "1px solid #e0e0e0", padding: "16px" }}>
+        <button
+          onClick={() => setIsComposing(true)}
+          style={{
+            width: "100%",
+            padding: "10px",
+            background: "#4285F4",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            marginBottom: "1rem",
+          }}
+        >
+          Compose
+        </button>
         <h3>Accounts</h3>
         <p>{profile.name}</p>
         <p style={{ color: "#666" }}>{profile.email}</p>
@@ -210,6 +342,12 @@ export default function DashboardPage() {
           </div>
         ) : (
           <p>Select an email to view its content.</p>
+        )}
+        {isComposing && (
+          <ComposeView
+            onSend={handleSendEmail}
+            onClose={() => setIsComposing(false)}
+          />
         )}
       </div>
     </div>

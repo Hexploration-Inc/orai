@@ -4,7 +4,12 @@ import prisma from "../lib/prisma";
 import { google } from "googleapis";
 import R2 from "../lib/r2";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
-import { archiveEmail, markEmailAsSpam, trashEmail } from "../services/gmail";
+import {
+  archiveEmail,
+  markEmailAsSpam,
+  sendEmail,
+  trashEmail,
+} from "../services/gmail";
 
 // A temporary way to get user ID from session. We will improve this.
 async function getUserIdFromSession(
@@ -153,6 +158,31 @@ export default async function (
       } catch (error) {
         console.error(`Failed to ${action} email:`, error);
         return reply.status(500).send({ error: `Failed to ${action} email` });
+      }
+    }
+  );
+
+  server.post(
+    "/emails/send",
+    async (
+      request: FastifyRequest<{
+        Body: { to: string; subject: string; html: string };
+      }>,
+      reply
+    ) => {
+      const tokens = (request as any).tokens;
+      const { to, subject, html } = request.body;
+
+      if (!tokens) {
+        return reply.status(401).send({ error: "Unauthorized: No tokens" });
+      }
+
+      try {
+        await sendEmail(tokens, { to, subject, html });
+        return reply.send({ success: true });
+      } catch (error) {
+        console.error("Failed to send email:", error);
+        return reply.status(500).send({ error: "Failed to send email" });
       }
     }
   );
