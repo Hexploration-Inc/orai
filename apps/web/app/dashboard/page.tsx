@@ -12,19 +12,36 @@ import {
   FileArchive,
   Mail,
   MailOpen,
+  Bold,
+  Italic,
+  List,
+  ListOrdered,
+  Link as LinkIcon,
+  Paperclip,
+  X,
+  Minimize2,
+  Maximize2,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "@/app/components/theme-toggle";
+
+// TipTap extensions
+import TextStyle from "@tiptap/extension-text-style";
+import Color from "@tiptap/extension-color";
+import ListItem from "@tiptap/extension-list-item";
+import BulletList from "@tiptap/extension-bullet-list";
+import OrderedList from "@tiptap/extension-ordered-list";
+import Link from "@tiptap/extension-link";
 
 // Types
 interface UserProfile {
@@ -49,111 +66,102 @@ interface Mailbox {
   active: boolean;
 }
 
-// Helper to get initials from a name
+// Helper functions
 const getInitials = (name: string) => {
-  const names = name.split(" ");
-  if (names.length > 1) {
-    return `${names[0]?.[0]}${names[names.length - 1]?.[0]}`.toUpperCase();
-  }
-  return name.substring(0, 2).toUpperCase();
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 };
 
-// Loading Skeleton Components
+// Loading skeletons
 const EmailListSkeleton = () => (
-  <div className="h-full">
-    <div className="p-4 border-b border-neutral-200 dark:border-neutral-800">
-      <Skeleton className="h-6 w-16" />
-    </div>
-    <div className="p-4 space-y-4">
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="flex items-start space-x-3">
-          <div className="w-5 flex-shrink-0">
-            <Skeleton className="h-2 w-2 rounded-full" />
-          </div>
-          <div className="flex-1 space-y-2">
-            <div className="flex justify-between items-center">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-3 w-12" />
-            </div>
-            <Skeleton className="h-4 w-48" />
-            <Skeleton className="h-3 w-64" />
-          </div>
+  <div className="space-y-1 p-2">
+    {Array.from({ length: 8 }).map((_, i) => (
+      <div key={i} className="p-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-3 w-16" />
         </div>
-      ))}
-    </div>
+        <Skeleton className="h-4 w-48" />
+        <Skeleton className="h-3 w-64" />
+      </div>
+    ))}
   </div>
 );
 
 const EmailDetailSkeleton = () => (
-  <div className="h-full flex flex-col">
-    <div className="p-6 border-b border-neutral-200 dark:border-neutral-800">
-      <Skeleton className="h-7 w-80 mb-3" />
-      <Skeleton className="h-4 w-64" />
+  <div className="h-full p-6 space-y-4">
+    <div className="flex items-center justify-between">
+      <Skeleton className="h-6 w-64" />
+      <div className="flex space-x-2">
+        <Skeleton className="h-9 w-9" />
+        <Skeleton className="h-9 w-9" />
+      </div>
     </div>
-    <div className="p-6 space-y-4">
+    <Skeleton className="h-4 w-48" />
+    <Separator />
+    <div className="space-y-3">
       <Skeleton className="h-4 w-full" />
       <Skeleton className="h-4 w-full" />
       <Skeleton className="h-4 w-3/4" />
-      <Skeleton className="h-4 w-full" />
-      <Skeleton className="h-4 w-2/3" />
     </div>
   </div>
 );
 
-// Empty State Components
+// Empty states
 const EmptyEmailList = () => (
-  <div className="h-full flex flex-col items-center justify-center text-center p-8">
-    <div className="bg-neutral-100 dark:bg-neutral-800 rounded-full p-6 mb-6">
-      <MailOpen className="h-12 w-12 text-neutral-400 dark:text-neutral-600" />
-    </div>
-    <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
-      No emails found
-    </h3>
-    <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-sm">
-      Your inbox is empty. When you receive emails, they'll appear here.
+  <div className="flex flex-col items-center justify-center h-64 text-center p-6">
+    <Mail className="h-12 w-12 text-muted-foreground mb-4" />
+    <h3 className="text-lg font-semibold mb-2">No emails found</h3>
+    <p className="text-sm text-muted-foreground">
+      Your inbox is empty or emails are still loading.
     </p>
   </div>
 );
 
 const EmptyEmailDetail = () => (
-  <div className="h-full flex flex-col items-center justify-center text-center p-8">
-    <div className="bg-neutral-100 dark:bg-neutral-800 rounded-full p-6 mb-6">
-      <Mail className="h-12 w-12 text-neutral-400 dark:text-neutral-600" />
-    </div>
-    <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
-      Select an email
-    </h3>
-    <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-sm">
-      Choose an email from the list to view its contents here.
+  <div className="flex flex-col items-center justify-center h-full text-center p-6">
+    <MailOpen className="h-16 w-16 text-muted-foreground mb-4" />
+    <h3 className="text-xl font-semibold mb-2">Select an email</h3>
+    <p className="text-muted-foreground">
+      Choose an email from the list to read its contents.
     </p>
   </div>
 );
 
 // Components
 const MailboxNav = ({ mailboxes }: { mailboxes: Mailbox[] }) => (
-  <nav className="p-3 space-y-1">
-    {mailboxes.map((mailbox) => (
-      <a
-        key={mailbox.name}
-        href="#"
-        className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-          mailbox.active
-            ? "bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
-            : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-900 hover:text-neutral-900 dark:hover:text-neutral-100"
-        }`}
-      >
-        <div className="flex items-center space-x-3">
-          <mailbox.icon size={18} />
-          <span className="font-medium">{mailbox.name}</span>
+  <div className="p-4 space-y-2">
+    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+      Mailboxes
+    </h2>
+    {mailboxes.map((mailbox) => {
+      const Icon = mailbox.icon;
+      return (
+        <div
+          key={mailbox.name}
+          className={`flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
+            mailbox.active
+              ? "bg-muted text-foreground"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          }`}
+        >
+          <div className="flex items-center space-x-3">
+            <Icon size={18} />
+            <span className="text-sm font-medium">{mailbox.name}</span>
+          </div>
+          {mailbox.count !== undefined && (
+            <span className="text-xs bg-muted-foreground/20 text-muted-foreground px-2 py-1 rounded-full">
+              {mailbox.count}
+            </span>
+          )}
         </div>
-        {mailbox.count ? (
-          <span className="px-2 py-0.5 text-xs font-semibold bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-full">
-            {mailbox.count}
-          </span>
-        ) : null}
-      </a>
-    ))}
-  </nav>
+      );
+    })}
+  </div>
 );
 
 const EmailList = ({
@@ -176,67 +184,50 @@ const EmailList = ({
   }
 
   return (
-    <div className="h-full">
-      <div className="px-6 py-4 border-b">
-        <h2 className="text-xl font-bold">Inbox</h2>
-      </div>
-      <div className="overflow-y-auto h-full pb-20">
-        {emails.map((email) => {
-          const fromName =
-            email.fromData?.name || email.fromData?.email || "Unknown";
-          return (
-            <div key={email.id}>
-              <div
-                onClick={() => onEmailSelect(email.id)}
-                className={`flex items-start px-6 py-4 cursor-pointer group hover:bg-muted/50 transition-colors ${
-                  selectedEmailId === email.id ? "bg-accent" : ""
-                }`}
-              >
-                <div className="w-5 flex-shrink-0 mr-4">
-                  {!email.isRead && (
-                    <div className="w-2.5 h-2.5 mt-2 bg-blue-500 rounded-full" />
-                  )}
-                </div>
-                <div className="flex-1 overflow-hidden">
-                  <div className="flex justify-between items-baseline mb-1">
-                    <p
-                      className={`truncate text-sm font-medium leading-5 ${
-                        email.isRead
-                          ? "text-muted-foreground"
-                          : "text-foreground font-semibold"
-                      }`}
-                    >
-                      {fromName}
-                    </p>
-                    <span
-                      className={`text-xs flex-shrink-0 ml-4 ${
-                        email.isRead
-                          ? "text-muted-foreground"
-                          : "text-foreground font-medium"
-                      } group-hover:text-foreground`}
-                    >
-                      {email.date}
-                    </span>
-                  </div>
+    <div className="h-full overflow-y-auto">
+      {emails.map((email) => (
+        <div key={email.id}>
+          <div
+            onClick={() => onEmailSelect(email.id)}
+            className={`p-4 cursor-pointer transition-colors border-l-2 ${
+              selectedEmailId === email.id
+                ? "bg-muted border-l-blue-500"
+                : "border-l-transparent hover:bg-muted/50"
+            }`}
+          >
+            <div className="flex items-start justify-between mb-1">
+              <div className="flex items-center space-x-3 flex-1 min-w-0">
+                {!email.isRead && (
+                  <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
+                )}
+                <div className="flex-1 min-w-0">
                   <p
-                    className={`truncate text-sm mb-1 leading-5 ${
-                      email.isRead
-                        ? "text-muted-foreground"
-                        : "font-semibold text-foreground"
+                    className={`text-sm truncate ${
+                      !email.isRead ? "font-semibold" : "font-medium"
                     }`}
                   >
-                    {email.subject}
-                  </p>
-                  <p className="text-xs text-muted-foreground truncate leading-4">
-                    {email.snippet}
+                    {email.fromData?.name || email.fromData?.email || "Unknown"}
                   </p>
                 </div>
               </div>
-              <Separator className="mx-6" />
+              <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
+                {email.date}
+              </span>
             </div>
-          );
-        })}
-      </div>
+            <h3
+              className={`text-sm mb-1 line-clamp-1 ${
+                !email.isRead ? "font-semibold" : "font-normal"
+              }`}
+            >
+              {email.subject || "No subject"}
+            </h3>
+            <p className="text-xs text-muted-foreground line-clamp-2">
+              {email.snippet || "No preview available"}
+            </p>
+          </div>
+          <Separator />
+        </div>
+      ))}
     </div>
   );
 };
@@ -260,18 +251,19 @@ const EmailDetail = ({
 
   return (
     <TooltipProvider>
-      <div className="h-full flex flex-col">
-        <div className="px-6 py-5 border-b border-neutral-200 dark:border-neutral-800 flex items-start justify-between">
+      <div className="h-full flex flex-col bg-background">
+        <div className="flex items-center justify-between p-4 border-b">
           <div className="flex-1 min-w-0">
-            <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-2 leading-7">
-              {email.subject}
+            <h2 className="text-lg font-semibold line-clamp-2 mb-1">
+              {email.subject || "No subject"}
             </h2>
-            <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-5">
+            <p className="text-sm text-muted-foreground">
               From:{" "}
               <span className="font-medium">
                 {email.fromData?.name || "Unknown"}
-              </span>{" "}
-              &lt;{email.fromData?.email}&gt;
+              </span>
+              <span className="mx-2">•</span>
+              <span>{email.date}</span>
             </p>
           </div>
           <div className="flex items-center space-x-2 ml-4">
@@ -279,7 +271,7 @@ const EmailDetail = ({
               <TooltipTrigger asChild>
                 <button
                   onClick={() => onModify(email.id, "archive")}
-                  className="p-2.5 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+                  className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                 >
                   <Archive size={18} />
                 </button>
@@ -290,7 +282,7 @@ const EmailDetail = ({
               <TooltipTrigger asChild>
                 <button
                   onClick={() => onModify(email.id, "trash")}
-                  className="p-2.5 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+                  className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                 >
                   <Trash2 size={18} />
                 </button>
@@ -308,9 +300,125 @@ const EmailDetail = ({
   );
 };
 
+// Editor toolbar
+const EditorToolbar = ({ editor }: { editor: any }) => {
+  if (!editor) {
+    return null;
+  }
+
+  const addLink = () => {
+    const url = window.prompt("Enter URL:");
+    if (url) {
+      editor.chain().focus().setLink({ href: url }).run();
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-1 p-2 border-b bg-muted/30">
+      <button
+        onClick={() => editor.chain().focus().toggleBold().run()}
+        className={`p-2 rounded hover:bg-muted transition-colors ${
+          editor.isActive("bold")
+            ? "bg-muted text-foreground"
+            : "text-muted-foreground"
+        }`}
+        title="Bold"
+      >
+        <Bold size={16} />
+      </button>
+
+      <button
+        onClick={() => editor.chain().focus().toggleItalic().run()}
+        className={`p-2 rounded hover:bg-muted transition-colors ${
+          editor.isActive("italic")
+            ? "bg-muted text-foreground"
+            : "text-muted-foreground"
+        }`}
+        title="Italic"
+      >
+        <Italic size={16} />
+      </button>
+
+      <div className="w-px h-6 bg-border mx-1" />
+
+      <button
+        onClick={() => editor.chain().focus().toggleBulletList().run()}
+        className={`p-2 rounded hover:bg-muted transition-colors ${
+          editor.isActive("bulletList")
+            ? "bg-muted text-foreground"
+            : "text-muted-foreground"
+        }`}
+        title="Bullet List"
+      >
+        <List size={16} />
+      </button>
+
+      <button
+        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+        className={`p-2 rounded hover:bg-muted transition-colors ${
+          editor.isActive("orderedList")
+            ? "bg-muted text-foreground"
+            : "text-muted-foreground"
+        }`}
+        title="Numbered List"
+      >
+        <ListOrdered size={16} />
+      </button>
+
+      <div className="w-px h-6 bg-border mx-1" />
+
+      <button
+        onClick={addLink}
+        className={`p-2 rounded hover:bg-muted transition-colors ${
+          editor.isActive("link")
+            ? "bg-muted text-foreground"
+            : "text-muted-foreground"
+        }`}
+        title="Add Link"
+      >
+        <LinkIcon size={16} />
+      </button>
+
+      <div className="flex-1" />
+
+      <select
+        onChange={(e) => {
+          const value = e.target.value;
+          if (value === "paragraph") {
+            editor.chain().focus().setParagraph().run();
+          } else {
+            editor
+              .chain()
+              .focus()
+              .toggleHeading({ level: parseInt(value) })
+              .run();
+          }
+        }}
+        className="text-xs bg-transparent border-none focus:outline-none text-muted-foreground"
+        value={
+          editor.isActive("heading", { level: 1 })
+            ? "1"
+            : editor.isActive("heading", { level: 2 })
+              ? "2"
+              : editor.isActive("heading", { level: 3 })
+                ? "3"
+                : "paragraph"
+        }
+      >
+        <option value="paragraph">Paragraph</option>
+        <option value="1">Heading 1</option>
+        <option value="2">Heading 2</option>
+        <option value="3">Heading 3</option>
+      </select>
+    </div>
+  );
+};
+
+// Compose view
 const ComposeView = ({
   onSend,
   onClose,
+  isPanel = false,
 }: {
   onSend: (data: {
     to: string;
@@ -319,75 +427,282 @@ const ComposeView = ({
     attachment?: File;
   }) => void;
   onClose: () => void;
+  isPanel?: boolean;
 }) => {
   const [to, setTo] = useState("");
   const [subject, setSubject] = useState("");
   const [attachment, setAttachment] = useState<File | undefined>();
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
 
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [
+      StarterKit,
+      TextStyle,
+      Color,
+      ListItem,
+      BulletList,
+      OrderedList,
+      Link.configure({
+        openOnClick: false,
+      }),
+    ],
     content: "",
     editorProps: {
       attributes: {
         class:
-          "prose dark:prose-invert focus:outline-none min-h-[150px] max-w-full",
+          "prose prose-sm max-w-none focus:outline-none min-h-[200px] p-4 text-foreground",
       },
     },
   });
 
   const handleSend = () => {
-    if (editor) {
-      onSend({ to, subject, html: editor.getHTML(), attachment });
+    if (editor && to && subject) {
+      onSend({
+        to,
+        subject,
+        html: editor.getHTML(),
+        attachment,
+      });
+      // Reset form
+      setTo("");
+      setSubject("");
+      setAttachment(undefined);
+      editor.commands.clearContent();
     }
   };
 
-  return (
-    <div className="fixed bottom-0 right-8 w-[500px] h-[400px] bg-card border rounded-t-lg shadow-2xl flex flex-col">
-      <div className="bg-muted px-4 py-2 flex justify-between items-center rounded-t-lg">
-        <span className="font-semibold">New Message</span>
-        <button
-          onClick={onClose}
-          className="text-muted-foreground hover:text-foreground"
-        >
-          &times;
-        </button>
-      </div>
-      <div className="p-2 space-y-2">
-        <input
-          type="email"
-          value={to}
-          onChange={(e) => setTo(e.target.value)}
-          placeholder="To"
-          className="w-full px-2 py-1 bg-transparent border-b focus:outline-none"
-        />
-        <input
-          type="text"
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-          placeholder="Subject"
-          className="w-full px-2 py-1 bg-transparent border-b focus:outline-none"
-        />
-      </div>
-      <div className="flex-1 p-2 overflow-y-auto">
-        <EditorContent editor={editor} />
-      </div>
-      <div className="px-4 py-2 border-t">
-        <input
-          type="file"
-          onChange={(e) => setAttachment(e.target.files?.[0])}
-          className="text-sm"
-        />
-      </div>
-      <button
-        onClick={handleSend}
-        className="w-full py-3 bg-blue-600 text-white font-semibold hover:bg-blue-700"
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      handleSend();
+    }
+  };
+
+  // Panel version for desktop
+  if (isPanel) {
+    return (
+      <div
+        className="h-full bg-background flex flex-col"
+        onKeyDown={handleKeyDown}
       >
-        Send
-      </button>
+        <div className="flex items-center justify-between p-4 border-b bg-muted/30">
+          <span className="font-semibold">New Message</span>
+          <button
+            onClick={onClose}
+            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="p-4 space-y-3 border-b">
+          <div className="flex items-center">
+            <label className="text-sm font-medium text-muted-foreground w-16">
+              To:
+            </label>
+            <input
+              type="email"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              placeholder="recipient@example.com"
+              className="flex-1 px-3 py-2 bg-background border rounded-md focus:outline-none focus:ring-2 focus:ring-ring text-sm"
+            />
+          </div>
+          <div className="flex items-center">
+            <label className="text-sm font-medium text-muted-foreground w-16">
+              Subject:
+            </label>
+            <input
+              type="text"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="Enter subject..."
+              className="flex-1 px-3 py-2 bg-background border rounded-md focus:outline-none focus:ring-2 focus:ring-ring text-sm"
+            />
+          </div>
+        </div>
+
+        <EditorToolbar editor={editor} />
+
+        <div className="flex-1 overflow-hidden">
+          <EditorContent editor={editor} className="h-full overflow-y-auto" />
+        </div>
+
+        <div className="p-4 border-t bg-muted/30">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <input
+                type="file"
+                id="attachment-panel"
+                onChange={(e) => setAttachment(e.target.files?.[0])}
+                className="hidden"
+              />
+              <label
+                htmlFor="attachment-panel"
+                className="flex items-center space-x-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md cursor-pointer transition-colors"
+              >
+                <Paperclip size={16} />
+                <span>Attach file</span>
+              </label>
+              {attachment && (
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                  {attachment.name}
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <div className="text-xs text-muted-foreground">
+                Ctrl+Enter to send
+              </div>
+              <button
+                onClick={handleSend}
+                disabled={!to || !subject}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <Send size={16} />
+                <span>Send</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Mobile overlay version
+  if (isMinimized) {
+    return (
+      <div className="fixed bottom-4 right-8 bg-card border rounded-lg shadow-lg p-3 cursor-pointer min-w-[200px] z-50">
+        <div
+          onClick={() => setIsMinimized(false)}
+          className="flex items-center justify-between"
+        >
+          <span className="text-sm font-medium">New Message</span>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setIsMinimized(false)}
+              className="p-1 hover:bg-muted rounded"
+            >
+              <Maximize2 size={14} />
+            </button>
+            <button onClick={onClose} className="p-1 hover:bg-muted rounded">
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+        {to && <p className="text-xs text-muted-foreground mt-1">To: {to}</p>}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`fixed bg-card border rounded-lg shadow-2xl flex flex-col transition-all z-50 ${
+        isMaximized ? "inset-4" : "bottom-4 right-8 w-[600px] h-[500px]"
+      }`}
+      onKeyDown={handleKeyDown}
+    >
+      <div className="flex items-center justify-between p-4 border-b bg-muted/30 rounded-t-lg">
+        <span className="font-semibold">New Message</span>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setIsMinimized(true)}
+            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors"
+          >
+            <Minimize2 size={16} />
+          </button>
+          <button
+            onClick={() => setIsMaximized(!isMaximized)}
+            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors"
+          >
+            <Maximize2 size={16} />
+          </button>
+          <button
+            onClick={onClose}
+            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      </div>
+
+      <div className="p-4 space-y-3 border-b">
+        <div className="flex items-center">
+          <label className="text-sm font-medium text-muted-foreground w-16">
+            To:
+          </label>
+          <input
+            type="email"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            placeholder="recipient@example.com"
+            className="flex-1 px-3 py-2 bg-background border rounded-md focus:outline-none focus:ring-2 focus:ring-ring text-sm"
+          />
+        </div>
+        <div className="flex items-center">
+          <label className="text-sm font-medium text-muted-foreground w-16">
+            Subject:
+          </label>
+          <input
+            type="text"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            placeholder="Enter subject..."
+            className="flex-1 px-3 py-2 bg-background border rounded-md focus:outline-none focus:ring-2 focus:ring-ring text-sm"
+          />
+        </div>
+      </div>
+
+      <EditorToolbar editor={editor} />
+
+      <div className="flex-1 overflow-hidden">
+        <EditorContent editor={editor} className="h-full overflow-y-auto" />
+      </div>
+
+      <div className="p-4 border-t bg-muted/30 rounded-b-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <input
+              type="file"
+              id="attachment-mobile"
+              onChange={(e) => setAttachment(e.target.files?.[0])}
+              className="hidden"
+            />
+            <label
+              htmlFor="attachment-mobile"
+              className="flex items-center space-x-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md cursor-pointer transition-colors"
+            >
+              <Paperclip size={16} />
+              <span>Attach file</span>
+            </label>
+            {attachment && (
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                {attachment.name}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <div className="text-xs text-muted-foreground">
+              Ctrl+Enter to send
+            </div>
+            <button
+              onClick={handleSend}
+              disabled={!to || !subject}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <Send size={16} />
+              <span>Send</span>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
+// Mobile email detail
 const MobileEmailDetail = ({
   email,
   onModify,
@@ -408,93 +723,85 @@ const MobileEmailDetail = ({
   }
 
   return (
-    <div className="fixed inset-0 bg-white dark:bg-neutral-950 z-50 lg:hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-800">
+    <div className="fixed inset-0 bg-background z-50 lg:hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b">
         <button
           onClick={onBack}
-          className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+          className="p-2 hover:bg-muted rounded-lg transition-colors"
         >
           ←
         </button>
         <div className="flex items-center space-x-2">
           <button
             onClick={() => onModify(email.id, "archive")}
-            className="p-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
           >
             <Archive size={18} />
           </button>
           <button
             onClick={() => onModify(email.id, "trash")}
-            className="p-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
           >
             <Trash2 size={18} />
           </button>
         </div>
       </div>
       <div className="px-4 py-4">
-        <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-2">
-          {email.subject}
-        </h2>
-        <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+        <h2 className="text-lg font-bold mb-2">{email.subject}</h2>
+        <p className="text-sm text-muted-foreground mb-4">
           From:{" "}
           <span className="font-medium">
             {email.fromData?.name || "Unknown"}
-          </span>{" "}
-          &lt;{email.fromData?.email}&gt;
+          </span>
         </p>
+        <div
+          className="prose dark:prose-invert max-w-none"
+          dangerouslySetInnerHTML={{ __html: email.bodyHtml || "" }}
+        />
       </div>
-      <div
-        className="px-4 prose dark:prose-invert max-w-none flex-1 overflow-y-auto prose-sm"
-        dangerouslySetInnerHTML={{ __html: email.bodyHtml || "" }}
-      />
     </div>
   );
 };
 
-// The main dashboard component
+// Main dashboard component
 export default function DashboardPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [emails, setEmails] = useState<Email[]>([]);
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [isLoadingEmails, setIsLoadingEmails] = useState(true);
   const [isLoadingEmail, setIsLoadingEmail] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
   const [showMobileDetail, setShowMobileDetail] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // MOCK DATA: For mailboxes
   const mailboxes: Mailbox[] = [
-    {
-      name: "Inbox",
-      icon: Inbox,
-      count: emails.filter((e) => !e.isRead).length,
-      active: true,
-    },
-    { name: "Sent", icon: Send, active: false },
-    { name: "Archived", icon: FileArchive, active: false },
+    { name: "Inbox", icon: Inbox, count: emails.length, active: true },
+    { name: "Sent", icon: Send, count: 12, active: false },
+    { name: "Archive", icon: FileArchive, count: 8, active: false },
   ];
 
   const api = (url: string, options?: RequestInit) =>
     fetch(`http://localhost:3001/api${url}`, {
-      ...options,
       credentials: "include",
+      ...options,
     });
 
   const fetchEmails = async () => {
+    setIsLoadingEmails(true);
     try {
-      setIsLoadingEmails(true);
-      const emailsRes = await api("/emails");
-      if (!emailsRes.ok) {
-        throw new Error("Failed to fetch emails.");
+      const res = await api("/emails");
+      if (!res.ok) {
+        throw new Error("Failed to fetch emails. Are you logged in?");
       }
-      const emailsData = await emailsRes.json();
-      // MOCK DATA: Add isRead and date for styling
-      const processedEmails = emailsData.map((email: any, index: number) => ({
+      const data = await res.json();
+
+      // Add mock date field
+      const emailsWithDate = data.map((email: any) => ({
         ...email,
-        isRead: index % 3 !== 0, // Mock some as unread
         date: "Apr 22", // Mock date
       }));
-      setEmails(processedEmails);
+
+      setEmails(emailsWithDate);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -523,9 +830,9 @@ export default function DashboardPage() {
     if (selectedEmail?.id === id) return;
     setIsLoadingEmail(true);
     setSelectedEmail(null);
-    setShowMobileDetail(true); // Show mobile detail on selection
+    setShowMobileDetail(true);
 
-    // Mark as read on the frontend immediately for better UX
+    // Mark as read immediately for better UX
     setEmails(emails.map((e) => (e.id === id ? { ...e, isRead: true } : e)));
 
     try {
@@ -534,7 +841,6 @@ export default function DashboardPage() {
         throw new Error("Failed to fetch email details.");
       }
       const data = await res.json();
-      // Add the mocked fields to the selected email as well
       setSelectedEmail({ ...data, isRead: true, date: "Apr 22" });
     } catch (err: any) {
       setError(err.message);
@@ -590,7 +896,7 @@ export default function DashboardPage() {
       }
       toast("Email sent successfully!");
       setIsComposing(false);
-      await fetchEmails(); // Refresh email list
+      await fetchEmails();
     } catch (err: any) {
       setError(err.message);
     }
@@ -598,15 +904,13 @@ export default function DashboardPage() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen bg-white dark:bg-neutral-950">
+      <div className="flex items-center justify-center h-screen bg-background">
         <div className="text-center">
           <div className="bg-red-50 dark:bg-red-950/30 rounded-full p-6 mb-4 inline-block">
             <Mail className="h-12 w-12 text-red-500" />
           </div>
-          <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
-            Something went wrong
-          </h2>
-          <p className="text-neutral-600 dark:text-neutral-400">{error}</p>
+          <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
+          <p className="text-muted-foreground">{error}</p>
         </div>
       </div>
     );
@@ -614,7 +918,7 @@ export default function DashboardPage() {
 
   if (!profile) {
     return (
-      <div className="flex items-center justify-center h-screen bg-white dark:bg-neutral-950">
+      <div className="flex items-center justify-center h-screen bg-background">
         <div className="text-center">
           <Skeleton className="h-12 w-12 rounded-full mx-auto mb-4" />
           <Skeleton className="h-6 w-32 mx-auto mb-2" />
@@ -670,11 +974,19 @@ export default function DashboardPage() {
         <PanelResizeHandle className="w-px bg-border hover:w-px hover:bg-blue-500 transition-colors hidden lg:block" />
         <Panel defaultSize={50} minSize={30} className="hidden lg:block">
           <div className="h-full bg-background">
-            <EmailDetail
-              email={selectedEmail}
-              onModify={handleModifyEmail}
-              isLoading={isLoadingEmail}
-            />
+            {isComposing ? (
+              <ComposeView
+                onSend={handleSendEmail}
+                onClose={() => setIsComposing(false)}
+                isPanel={true}
+              />
+            ) : (
+              <EmailDetail
+                email={selectedEmail}
+                onModify={handleModifyEmail}
+                isLoading={isLoadingEmail}
+              />
+            )}
           </div>
         </Panel>
       </PanelGroup>
@@ -689,11 +1001,14 @@ export default function DashboardPage() {
         />
       )}
 
+      {/* Mobile compose overlay */}
       {isComposing && (
-        <ComposeView
-          onSend={handleSendEmail}
-          onClose={() => setIsComposing(false)}
-        />
+        <div className="lg:hidden">
+          <ComposeView
+            onSend={handleSendEmail}
+            onClose={() => setIsComposing(false)}
+          />
+        </div>
       )}
     </div>
   );
