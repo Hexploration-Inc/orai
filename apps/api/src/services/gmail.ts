@@ -3,6 +3,8 @@ import { gmail_v1, google } from "googleapis";
 import prisma from "../lib/prisma";
 import R2 from "../lib/r2";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
+import Mail from "nodemailer/lib/mailer";
+import MailComposer from "nodemailer/lib/mail-composer";
 
 /**
  * Creates an authenticated OAuth2 client for the user.
@@ -185,4 +187,36 @@ export async function markEmailAsSpam(tokens: Credentials, messageId: string) {
       removeLabelIds: ["INBOX"],
     },
   });
+}
+
+/**
+ * Sends an email from the user's account.
+ * @param tokens The user's OAuth credentials.
+ * @param options The mail options (to, subject, html).
+ */
+
+export async function sendEmail(
+  tokens: Credentials,
+  options: Mail.Options
+): Promise<string | null | undefined> {
+  const auth = createOAuth2Client(tokens);
+  const gmail = google.gmail({ version: "v1", auth });
+
+  const mailComposer = new MailComposer(options);
+  const message = await mailComposer.compile().build();
+
+  const encodedMessage = Buffer.from(message)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+
+  const { data } = await gmail.users.messages.send({
+    userId: "me",
+    requestBody: {
+      raw: encodedMessage,
+    },
+  });
+
+  return data.id;
 }
