@@ -30,6 +30,10 @@ async function getUserIdFromSession(
   oauth2Client.setCredentials(tokens);
   const oauth2 = google.oauth2({ version: "v2", auth: oauth2Client });
   const { data } = await oauth2.userinfo.get();
+
+  // Attach email to the request object for later use
+  (request as any).userEmail = data.email;
+
   return data.id ?? null;
 }
 
@@ -55,19 +59,71 @@ export default async function (
     }
   });
 
-  server.get("/emails", async (request, reply) => {
-    const userId = (request as any).userId;
+  server.get(
+    "/emails",
+    async (
+      request: FastifyRequest<{ Querystring: { mailbox?: string } }>,
+      reply
+    ) => {
+      const userId = (request as any).userId;
+      const userEmail = (request as any).userEmail;
+      const { mailbox = "inbox" } = request.query;
 
-    const emails = await prisma.email.findMany({
-      where: { userId: userId },
-      orderBy: {
-        receivedAt: "desc",
-      },
-      take: 100,
-    });
+      let whereClause: any = { userId: userId };
 
-    return emails;
-  });
+      switch (mailbox.toLowerCase()) {
+        case "sent":
+          // Check if the email has the SENT label
+          whereClause.labels = {
+            has: "SENT",
+          };
+          break;
+        case "archive":
+          // Archived emails are those that don't have INBOX label but aren't deleted/spam
+          whereClause.AND = [
+            {
+              NOT: {
+                labels: {
+                  has: "INBOX",
+                },
+              },
+            },
+            {
+              NOT: {
+                labels: {
+                  has: "TRASH",
+                },
+              },
+            },
+            {
+              NOT: {
+                labels: {
+                  has: "SPAM",
+                },
+              },
+            },
+          ];
+          break;
+        case "inbox":
+        default:
+          // Inbox emails have the INBOX label
+          whereClause.labels = {
+            has: "INBOX",
+          };
+          break;
+      }
+
+      const emails = await prisma.email.findMany({
+        where: whereClause,
+        orderBy: {
+          receivedAt: "desc",
+        },
+        take: 100,
+      });
+
+      return emails;
+    }
+  );
 
   server.get(
     "/emails/:id",
