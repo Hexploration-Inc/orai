@@ -33,11 +33,11 @@ export async function syncRecentEmails(userId: string, tokens: Credentials) {
   const auth = createOAuth2Client(tokens);
   const gmail = google.gmail({ version: "v1", auth });
 
-  // 1. Fetch the list of the most recent 100 message IDs from the primary inbox category.
+  // 1. Fetch ALL messages, not just primary category
   const listResponse = await gmail.users.messages.list({
     userId: "me",
-    maxResults: 100, // As per our hybrid strategy
-    q: "category:primary", // Use the search query parameter for precise filtering
+    maxResults: 100,
+    // Remove the category filter to get all emails
   });
 
   const messageIds = listResponse.data.messages?.map((m) => m.id!) ?? [];

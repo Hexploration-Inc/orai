@@ -21,6 +21,7 @@ import {
   Maximize2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { formatDistanceToNow } from "date-fns";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -58,7 +59,6 @@ interface Mailbox {
   name: string;
   icon: React.ElementType;
   count?: number;
-  active: boolean;
 }
 
 // Helper functions
@@ -69,6 +69,11 @@ const getInitials = (name: string) => {
     .join("")
     .toUpperCase()
     .slice(0, 2);
+};
+
+const formatDate = (dateString?: string) => {
+  if (!dateString) return "No date";
+  return formatDistanceToNow(new Date(dateString), { addSuffix: true });
 };
 
 // Loading skeletons
@@ -128,8 +133,16 @@ const EmptyEmailDetail = () => (
 );
 
 // Components
-// Update the MailboxNav component with colored icons
-const MailboxNav = ({ mailboxes }: { mailboxes: Mailbox[] }) => (
+// Update the MailboxNav component to handle selection
+const MailboxNav = ({
+  mailboxes,
+  onMailboxSelect,
+  activeMailbox,
+}: {
+  mailboxes: Mailbox[];
+  onMailboxSelect: (name: string) => void;
+  activeMailbox: string;
+}) => (
   <div className="p-4 space-y-2">
     <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
       Mailboxes
@@ -153,8 +166,9 @@ const MailboxNav = ({ mailboxes }: { mailboxes: Mailbox[] }) => (
       return (
         <div
           key={mailbox.name}
+          onClick={() => onMailboxSelect(mailbox.name)}
           className={`flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
-            mailbox.active
+            activeMailbox.toLowerCase() === mailbox.name.toLowerCase()
               ? "bg-muted text-foreground"
               : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
           }`}
@@ -739,6 +753,7 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [emails, setEmails] = useState<Email[]>([]);
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
+  const [activeMailbox, setActiveMailbox] = useState("Inbox");
   const [isLoadingEmails, setIsLoadingEmails] = useState(true);
   const [isLoadingEmail, setIsLoadingEmail] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
@@ -746,9 +761,9 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   const mailboxes: Mailbox[] = [
-    { name: "Inbox", icon: Inbox, count: emails.length, active: true },
-    { name: "Sent", icon: Send, count: 12, active: false },
-    { name: "Archive", icon: FileArchive, count: 8, active: false },
+    { name: "Inbox", icon: Inbox, count: emails.length },
+    { name: "Sent", icon: Send, count: 12 },
+    { name: "Archive", icon: FileArchive, count: 8 },
   ];
 
   const api = (url: string, options?: RequestInit) =>
@@ -757,10 +772,11 @@ export default function DashboardPage() {
       ...options,
     });
 
-  const fetchEmails = async () => {
+  const fetchEmails = async (mailbox: string) => {
     setIsLoadingEmails(true);
+    setSelectedEmail(null);
     try {
-      const res = await api("/emails");
+      const res = await api(`/emails?mailbox=${mailbox.toLowerCase()}`);
       if (!res.ok) {
         throw new Error("Failed to fetch emails. Are you logged in?");
       }
@@ -768,7 +784,7 @@ export default function DashboardPage() {
 
       const emailsWithDate = data.map((email: any) => ({
         ...email,
-        date: "Apr 22",
+        date: formatDate(email.receivedAt),
       }));
 
       setEmails(emailsWithDate);
@@ -793,8 +809,11 @@ export default function DashboardPage() {
     };
 
     fetchProfile();
-    fetchEmails();
   }, []);
+
+  useEffect(() => {
+    fetchEmails(activeMailbox);
+  }, [activeMailbox]);
 
   // Update the handleEmailSelect function to close composer when selecting an email
   const handleEmailSelect = async (id: string) => {
@@ -817,7 +836,11 @@ export default function DashboardPage() {
         throw new Error("Failed to fetch email details.");
       }
       const data = await res.json();
-      setSelectedEmail({ ...data, isRead: true, date: "Apr 22" });
+      setSelectedEmail({
+        ...data,
+        isRead: true,
+        date: formatDate(data.receivedAt),
+      });
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -840,7 +863,7 @@ export default function DashboardPage() {
         throw new Error(`Failed to ${action} email.`);
       }
       toast(`Email moved to ${action}.`);
-      await fetchEmails();
+      await fetchEmails(activeMailbox);
       setSelectedEmail(null);
     } catch (err: any) {
       setError(err.message);
@@ -872,10 +895,14 @@ export default function DashboardPage() {
       }
       toast("Email sent successfully!");
       setIsComposing(false);
-      await fetchEmails();
+      // await fetchEmails(); // We will refresh the 'Sent' folder later
     } catch (err: any) {
       setError(err.message);
     }
+  };
+
+  const handleMailboxChange = (mailboxName: string) => {
+    setActiveMailbox(mailboxName);
   };
 
   if (error) {
@@ -933,7 +960,11 @@ export default function DashboardPage() {
       >
         <Panel defaultSize={20} minSize={15} className="hidden md:block">
           <div className="bg-background h-full">
-            <MailboxNav mailboxes={mailboxes} />
+            <MailboxNav
+              mailboxes={mailboxes}
+              onMailboxSelect={handleMailboxChange}
+              activeMailbox={activeMailbox}
+            />
           </div>
         </Panel>
         <PanelResizeHandle className="w-px bg-border hover:w-px hover:bg-blue-500 transition-colors hidden md:block" />
